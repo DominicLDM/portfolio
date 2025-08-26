@@ -71,14 +71,8 @@ export default function SpacePortfolio() {
             <div className="relative group">
               <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-300 tracking-wider transition-all duration-500 cursor-default select-none mt-2 mb-2"
                    style={{ 
-                     fontFamily: "'PlanetoidX', 'Orbitron', 'Montserrat', 'Poppins', sans-serif",
-                     filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.4))',
-                     textShadow: '0 0 30px rgba(168, 85, 247, 0.6)'
+                     fontFamily: "'PlanetoidX', 'Orbitron', 'Montserrat', 'Poppins', sans-serif"
                    }}>
-                Dominic
-              </div>
-              <div className="absolute inset-0 text-4xl font-black bg-gradient-to-r from-cyan-400/20 via-purple-300/20 to-pink-300/20 bg-clip-text blur-sm -z-10 animate-pulse mt-2 mb-2"
-                   style={{ fontFamily: "'PlanetoidX', 'Orbitron', 'Montserrat', 'Poppins', sans-serif" }}>
                 Dominic
               </div>
             </div>
