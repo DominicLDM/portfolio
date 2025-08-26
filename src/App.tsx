@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Stars } from '@react-three/drei'
+import LowPolyPlanetEarth from './models/LowPolyPlanetEarth'
 import { X } from "lucide-react"
 
 export default function SpacePortfolio() {
@@ -6,6 +9,8 @@ export default function SpacePortfolio() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [autoRotate, setAutoRotate] = useState(true)
+  const interactionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setIsLoaded(true)
@@ -153,28 +158,40 @@ export default function SpacePortfolio() {
         </div>
       )}
 
-      {/* main content area - globe placeholder */}
-      <main className={`relative z-10 flex items-center justify-center min-h-[calc(100vh-100px)] transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <div className="text-center">
-          {/* 3D globe placeholder */}
-          <div className="w-80 h-80 mx-auto mb-8 rounded-full bg-gradient-to-br from-blue-500/15 via-green-500/15 to-blue-600/15 border-2 border-purple-400/30 flex items-center justify-center backdrop-blur-sm relative group hover:border-purple-300/40 transition-all duration-500">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
-          <div className="text-purple-200 text-xl font-medium relative z-10 group-hover:text-purple-100 transition-colors duration-300 text-center">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut laoreet cursus, enim erat dictum urna, nec dictum velit enim eu justo.
-              <div className="text-base text-purple-300 mt-3 group-hover:text-purple-200 transition-colors duration-300">Lorem ipsum dolor sit amet.</div>
-              <div className="text-sm text-purple-400 mt-2 opacity-75 group-hover:opacity-100 transition-opacity duration-300">Lorem ipsum dolor sit amet, consectetur.</div>
-            </div>
-          </div>
-
-          <div className={`transform transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-            <p className="text-purple-200 text-xl max-w-md mx-auto leading-relaxed">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            </p>
-            <p className="text-purple-300 text-lg mt-2 opacity-75">
-              Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
-            </p>
-          </div>
-        </div>
+      {/* main content area - immersive 3D scene */}
+      <main className="fixed inset-0 z-10 w-full h-full transition-all duration-1000">
+        <Canvas
+          camera={{ position: [0, 0, 7], fov: 60 }}
+          className="w-full h-full"
+          style={{ background: '#000' }}
+        >
+          {/* Improved Lighting */}
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[5, 10, 7]} intensity={1.2} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+          <directionalLight position={[-5, -10, -7]} intensity={0.7} color="#7e8bf5" />
+          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          {/* Centered Model */}
+          <LowPolyPlanetEarth position={[0, -2.6, 0]} scale={[2.2, 2.2, 2.2]} />
+          <OrbitControls
+            enablePan={true}
+            enableZoom={true}
+            enableRotate={true}
+            autoRotate={autoRotate}
+            autoRotateSpeed={0.5}
+            maxDistance={10}
+            minDistance={2}
+            onStart={() => {
+              setAutoRotate(false);
+              if (interactionTimeout.current) {
+                clearTimeout(interactionTimeout.current);
+              }
+            }}
+            onEnd={() => {
+              if (interactionTimeout.current) clearTimeout(interactionTimeout.current)
+              interactionTimeout.current = setTimeout(() => setAutoRotate(true), 3000) // 3 seconds
+            }}
+          />
+        </Canvas>
       </main>
 
       {/* modal popups for sections */}
