@@ -1,6 +1,13 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
+import { Preload } from '@react-three/drei'
+import { useGLTF } from '@react-three/drei'
+useGLTF.preload('/models/black_hole.glb')
+useGLTF.preload('/models/galaxy.glb')
+useGLTF.preload('/models/galaxy2.glb')
+useGLTF.preload('/models/Goose.glb')
+useGLTF.preload('/models/low_poly_planet_earth.glb')
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Text, OrbitControls, Stars, useGLTF } from '@react-three/drei'
+import { Text, OrbitControls, Stars } from '@react-three/drei'
 import { useThree } from "@react-three/fiber"
 import { X, RotateCcw } from "lucide-react"
 import * as THREE from 'three'
@@ -770,86 +777,86 @@ export default function SpacePortfolio() {
         </button>
       )}
 
-      {/* Main 3D content */}
-      {!isLoading && (
-        <main className="fixed inset-0 z-10 w-full h-full">
-          {(() => {
-            // Responsive FOV for camera
-            let fov = 55;
-            if (window.innerWidth < 600) fov = 80;
-            return (
-              <Canvas
-                camera={{ position: [0, 0, initialCameraZ], fov }}
-                className="w-full h-full"
-                style={{ background: 'transparent' }}
-              >
-                <AnimatedCamera position={cameraPos} />
-                {/* Typewriter animation - keep mounted until explosion is done */}
-                {!isTypewriterDone && (
-                  <Typewriter3D
-                    onExplodeStart={handleExplodeStart}
-                    onExplodeComplete={handleExplodeComplete}
-                  />
-                )}
-                {/* All scene elements - always loaded and rendered properly */}
-                <Stars 
-                  radius={100} 
-                  depth={60} 
-                  count={1800} 
-                  factor={4} 
-                  saturation={0} 
-                  fade 
-                  speed={0.5}
+      {/* Main 3D content - always rendered, loading screen overlays */}
+      <main className="fixed inset-0 z-10 w-full h-full">
+        {(() => {
+          // Responsive FOV for camera
+          let fov = 55;
+          if (window.innerWidth < 600) fov = 80;
+          return (
+            <Canvas
+              camera={{ position: [0, 0, initialCameraZ], fov }}
+              className="w-full h-full"
+              style={{ background: 'transparent' }}
+            >
+              <AnimatedCamera position={cameraPos} />
+              {/* Typewriter animation - keep mounted until explosion is done */}
+              {!isTypewriterDone && (
+                <Typewriter3D
+                  onExplodeStart={handleExplodeStart}
+                  onExplodeComplete={handleExplodeComplete}
                 />
-                <StarsPoints count={2200} />
-                <LowPolyPlanetEarth position={[0, -2.7, 0]} scale={[2.2, 2.2, 2.2]} />
-                <Galaxy />
-                <Galaxy2 />
-                <Asteroids />
-                <Blackhole />
-                <Goose />
-                {/* Lighting - always on and properly configured */}
-                <ambientLight intensity={0.4} />
-                <directionalLight position={[12, 18, 8]} intensity={1.3} color="#aee" castShadow />
-                <directionalLight position={[-8, -12, -10]} intensity={0.7} color="#7e8bf5" />
-                <ambientLight intensity={0.3} color="#1a0b2e" />
-                <pointLight position={[-12, 20, -60]} intensity={2.2} color="#9d4edd" distance={80} decay={1.5} />
-                <pointLight position={[36, -12, 80]} intensity={1.7} color="#7209b7" distance={70} decay={1.5} />
-                <pointLight position={[0, -65, 5]} intensity={3.0} color="#c77dff" distance={40} decay={1.8} />
-                <pointLight position={[0, -2.7, 0]} intensity={1.1} color="#4cc9f0" distance={12} decay={2} />
-                <directionalLight position={[-15, -8, -12]} intensity={0.3} color="#9d4edd" />
-                <directionalLight position={[8, -15, 8]} intensity={0.2} color="#6a4c93" />
-                <spotLight
-                  position={[0, 8, 6]}
-                  angle={0.45}
-                  penumbra={0.7}
-                  intensity={2.2}
-                  color="#fff8e1"
-                  distance={18}
-                  castShadow
-                  target-position={[0, -2.7, 0]}
+              )}
+              {/* All scene elements - always loaded and rendered properly */}
+              <Stars 
+                radius={100} 
+                depth={60} 
+                count={1800} 
+                factor={4} 
+                saturation={0} 
+                fade 
+                speed={0.5}
+              />
+              <StarsPoints count={2200} />
+              <LowPolyPlanetEarth position={[0, -2.7, 0]} scale={[2.2, 2.2, 2.2]} />
+              <Galaxy />
+              <Galaxy2 />
+              <Asteroids />
+              <Blackhole />
+              <Goose />
+              {/* Lighting - always on and properly configured */}
+              <ambientLight intensity={0.4} />
+              <directionalLight position={[12, 18, 8]} intensity={1.3} color="#aee" castShadow />
+              <directionalLight position={[-8, -12, -10]} intensity={0.7} color="#7e8bf5" />
+              <ambientLight intensity={0.3} color="#1a0b2e" />
+              <pointLight position={[-12, 20, -60]} intensity={2.2} color="#9d4edd" distance={80} decay={1.5} />
+              <pointLight position={[36, -12, 80]} intensity={1.7} color="#7209b7" distance={70} decay={1.5} />
+              <pointLight position={[0, -65, 5]} intensity={3.0} color="#c77dff" distance={40} decay={1.8} />
+              <pointLight position={[0, -2.7, 0]} intensity={1.1} color="#4cc9f0" distance={12} decay={2} />
+              <directionalLight position={[-15, -8, -12]} intensity={0.3} color="#9d4edd" />
+              <directionalLight position={[8, -15, 8]} intensity={0.2} color="#6a4c93" />
+              <spotLight
+                position={[0, 8, 6]}
+                angle={0.45}
+                penumbra={0.7}
+                intensity={2.2}
+                color="#fff8e1"
+                distance={18}
+                castShadow
+                target-position={[0, -2.7, 0]}
+              />
+              {/* Only enable controls when UI is visible */}
+              {showUI && (
+                <OrbitControls
+                  ref={controlsRef}
+                  enablePan={false}
+                  enableZoom={true}
+                  enableRotate={true}
+                  autoRotate={autoRotate}
+                  autoRotateSpeed={0.5}
+                  maxDistance={10}
+                  minDistance={3.5}
+                  target={cameraTarget}
+                  onStart={handleInteractionStart}
+                  onEnd={handleInteractionEnd}
                 />
-                {/* Only enable controls when UI is visible */}
-                {showUI && (
-                  <OrbitControls
-                    ref={controlsRef}
-                    enablePan={true}
-                    enableZoom={true}
-                    enableRotate={true}
-                    autoRotate={autoRotate}
-                    autoRotateSpeed={0.5}
-                    maxDistance={10}
-                    minDistance={3.5}
-                    target={cameraTarget}
-                    onStart={handleInteractionStart}
-                    onEnd={handleInteractionEnd}
-                  />
-                )}
-              </Canvas>
-            );
-          })()}
-        </main>
-      )}
+              )}
+              {/* Drei Preload for materials/textures */}
+              <Preload all />
+            </Canvas>
+          );
+        })()}
+      </main>
 
       {/* Modal popups */}
       {activeModal && (
