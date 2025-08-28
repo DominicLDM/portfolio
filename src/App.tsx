@@ -1338,7 +1338,7 @@ export default function SpacePortfolio() {
               style={{ background: 'transparent' }}
             >
               {/* @ts-ignore: Drei's EffectComposer types */}
-              {(showUI && !isLoading) && (
+              {(!isLoading) && (
                 <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
                   <Bloom intensity={0.15} luminanceThreshold={0.2}/>
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
