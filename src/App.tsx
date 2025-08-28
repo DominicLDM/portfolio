@@ -2,12 +2,6 @@ import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
 import { EffectComposer, Bloom, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
-useGLTF.preload('/models/black_hole.glb')
-useGLTF.preload('/models/galaxy.glb')
-useGLTF.preload('/models/galaxy2.glb')
-useGLTF.preload('/models/Goose.glb')
-useGLTF.preload('/models/low_poly_planet_earth.glb')
-useGLTF.preload('/models/galaxy3.glb')
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Text, OrbitControls, Stars } from '@react-three/drei'
 import { useThree } from "@react-three/fiber"
