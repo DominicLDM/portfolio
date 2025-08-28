@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
-import { EffectComposer, HueSaturation } from '@react-three/postprocessing'
+import { EffectComposer, Bloom, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
@@ -1337,11 +1337,14 @@ export default function SpacePortfolio() {
               className="w-full h-full"
               style={{ background: 'transparent' }}
             >
-              {/* Postprocessing effects: Vignette, Bloom, ChromaticAberration, HueSaturation */}
               {/* @ts-ignore: Drei's EffectComposer types */}
-              <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
-                <HueSaturation hue={0.0} saturation={0.1} />
-              </EffectComposer>
+              {(showUI && !isLoading) && (
+                <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
+                  <Bloom intensity={0.15} luminanceThreshold={0.2}/>
+                  <Vignette eskil={false} offset={0.18} darkness={0.38} />
+                  <HueSaturation hue={0.0} saturation={0.1} />
+                </EffectComposer>
+              )}
               <AnimatedCamera position={cameraPos} />
               {/* Typewriter animation - keep mounted until explosion is done */}
               {!isTypewriterDone && (
