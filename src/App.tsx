@@ -7,6 +7,7 @@ useGLTF.preload('/models/galaxy.glb')
 useGLTF.preload('/models/galaxy2.glb')
 useGLTF.preload('/models/Goose.glb')
 useGLTF.preload('/models/low_poly_planet_earth.glb')
+useGLTF.preload('/models/galaxy3.glb')
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Text, OrbitControls, Stars } from '@react-three/drei'
 import { useThree } from "@react-three/fiber"
@@ -572,7 +573,7 @@ function Typewriter3D({ onExplodeStart }: {
     const char = isTopLine ? topLetters[charIndex] : bottomLetters[charIndex]
 
     if (visibleIndex === 0) {
-      delay = 2400 // Initial pause before first letter
+      delay = 2200 // Initial pause before first letter
     } else if (visibleIndex === 3) {
       delay = 500 // Pause after 'Hi,'
     } else {
@@ -1384,6 +1385,8 @@ export default function SpacePortfolio() {
               <directionalLight position={[0, 12, 12]} intensity={1.45} color="#ffe066" />
               <directionalLight position={[0, -18, -12]} intensity={1.25} color="#ff6f91" />
               <ambientLight intensity={0.48} color="#b8c0ff" />
+              {/* Soft fill light for the opposite side of the earth */}
+              <directionalLight position={[0, -6, -22]} intensity={0.9} color="#e0e7ff" />
               <pointLight position={[-32, 40, -120]} intensity={1.0} color="#9d4edd" distance={180} decay={1.2} />
               <pointLight position={[72, -24, 160]} intensity={0.7} color="#7209b7" distance={180} decay={1.2} />
               <pointLight position={[0, -130, 10]} intensity={1.1} color="#c77dff" distance={120} decay={1.4} />
