@@ -1068,10 +1068,10 @@ function LoadingScreen({ isVisible }: { isVisible: boolean }) {
 }
 
 export default function SpacePortfolio() {
-  // Detect Safari browser
-  const isSafari = useMemo(() => {
+  // Detect mobile device
+  const isMobile = useMemo(() => {
     const ua = window.navigator.userAgent;
-    return /Safari/.test(ua) && !/Chrome|Chromium|Android/.test(ua);
+    return /Mobi|Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
   }, []);
   const [activeModal, setActiveModal] = React.useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
@@ -1343,9 +1343,11 @@ export default function SpacePortfolio() {
               style={{ background: 'transparent' }}
             >
               {/* @ts-ignore: Drei's EffectComposer types */}
-              {(!isLoading && !isSafari) && (
+              {(
+                (!isMobile && !isLoading) ||
+                (isMobile && showUI)
+              ) && (
                 <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
-                  <Bloom intensity={0.15} luminanceThreshold={0.2}/>
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
                   <HueSaturation hue={0.0} saturation={0.1} />
                 </EffectComposer>
