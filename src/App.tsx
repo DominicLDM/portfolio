@@ -14,6 +14,161 @@ import * as THREE from 'three'
 import { getSelectionRects } from 'troika-three-text'
 import LowPolyPlanetEarth from './models/LowPolyPlanetEarth'
 
+type LandmarkData = {
+  model: string;
+  position: [number, number, number];
+  tab: string;
+  scale?: [number, number, number];
+  rotation?: [number, number, number];
+};
+
+// Landmark component
+function Landmark({ model, position, tab, onClick, scale = [1, 1, 1], rotation = [0, 0, 0] }: {
+  model: string,
+  position: [number, number, number],
+  tab: string,
+  onClick: (tab: string) => void,
+  scale?: [number, number, number],
+  rotation?: [number, number, number]
+}) {
+  const { scene } = useGLTF(model)
+  const [hovered, setHovered] = useState(false)
+
+  // Helper to clone the scene for highlight
+  const highlightScene = useMemo(() => {
+    if (!scene) return null;
+    const clone = scene.clone();
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = new THREE.MeshStandardMaterial({
+          color: '#ffe066', // Vibrant yellow highlight
+          emissive: '#ffe066', // Glow effect
+          emissiveIntensity: 1.2,
+          transparent: true,
+          opacity: 0.55, // More translucent
+          wireframe: true,
+          depthWrite: false // Always appears on top, doesn't block other objects
+        });
+      }
+    });
+    return clone;
+  }, [scene]);
+
+  // Compute bounding box for adaptive ring size
+  const [ringRadius, setRingRadius] = useState(0.65);
+  const [ringYOffset, setRingYOffset] = useState(-0.18 * (scale[1] ?? 1));
+  const highlightScale = scale.map(s => s * 1.05) as [number, number, number];
+
+  useEffect(() => {
+    if (scene) {
+      const bbox = new THREE.Box3().setFromObject(scene);
+      const size = bbox.getSize(new THREE.Vector3());
+      // Use the largest X/Z dimension for the ring radius
+      const maxXZ = Math.max(size.x, size.z);
+      setRingRadius(0.5 + maxXZ * 0.55); // base + scale factor
+      // Calculate offset from model origin to bottom
+      const center = bbox.getCenter(new THREE.Vector3());
+      // The offset is min.y minus center.y, then apply scale
+      setRingYOffset((bbox.min.y - center.y) * Math.max(...scale));
+    }
+  }, [scene, scale]);
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Blurple ring always visible below the landmark */}
+      <mesh position={[0, ringYOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[ringRadius, 0.09 * Math.max(...scale), 32, 64]} />
+        <meshStandardMaterial
+          color="#7e8bf5"
+          emissive="#7e8bf5"
+          emissiveIntensity={0.7}
+          transparent
+          opacity={0.82}
+          roughness={0.35}
+          metalness={0.45}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* Highlight mesh matching model shape */}
+      {hovered && highlightScene && (
+        <primitive object={highlightScene.clone()} scale={highlightScale} />
+      )}
+      <primitive
+        object={scene}
+        scale={scale}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onClick={() => onClick(tab)}
+      />
+    </group>
+  )
+}
+
+const LANDMARKS: LandmarkData[] = [
+  {
+    model: '/models/House.glb',
+    position: [2.5, 1.2, 2.5],
+    tab: 'about',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/Briefcase.glb',
+    position: [-2.2, 1.5, -2.2],
+    tab: 'experience',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/laptop.glb',
+    position: [1.8, 2.1, -2.8],
+    tab: 'projects',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/skis.glb',
+    position: [-2.8, -1.7, 1.5],
+    tab: 'skiing',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/camera.glb',
+    position: [0, 1.5, -3],
+    tab: 'photos',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/controller.glb',
+    position: [0, 1.5, -3],
+    tab: 'gaming',
+    scale: [0.1, 0.1, 0.1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/esb.glb',
+    position: [0, 3.5, 0],
+    tab: 'cities',
+    scale: [0.2, 0.2, 0.2],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/headphones.glb',
+    position: [0, 1.5, -3],
+    tab: 'music',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  },
+  {
+    model: '/models/spotlight.glb',
+    position: [0, 1.5, -3],
+    tab: 'theatre',
+    scale: [1, 1, 1],
+    rotation: [0, 0, 0]
+  }
+]
+
 // Animated camera updater
 function AnimatedCamera({ position }: { position: [number, number, number] }) {
   const { camera } = useThree();
@@ -187,7 +342,7 @@ function Typewriter3D({ onExplodeStart }: {
     const char = isTopLine ? topLetters[charIndex] : bottomLetters[charIndex]
 
     if (visibleIndex === 0) {
-      delay = 700 // Initial pause before first letter
+      delay = 2400 // Initial pause before first letter
     } else if (visibleIndex === 3) {
       delay = 500 // Pause after 'Hi,'
     } else {
@@ -413,9 +568,152 @@ function Galaxy(props: any) {
   return (
     <primitive
       object={scene}
-      position={[-12, 20, -60]}
+      position={[-60, 20, -90]}
       scale={[5, 5, 5]}
-      rotation={[0, Math.PI * 0.2, 0]}
+      rotation={[12, Math.PI * 0.2, 0]}
+      {...props}
+    />
+  )
+}
+
+function Galaxy3(props: any) {
+  const { scene } = useGLTF('/models/galaxy3.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[190, 80, -30]}
+      scale={[0.05, 0.05, 0.05]}
+      rotation={[10, Math.PI * 0.2, 15]}
+      {...props}
+    />
+  )
+}
+
+function Nebula(props: any) {
+  const { scene } = useGLTF('/models/nebula.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[-190, -100, 120]}
+      scale={[1, 1, 1]}
+      rotation={[Math.PI * 0.3, Math.PI * 0.2, Math.PI * 0.3]}
+      {...props}
+    />
+  )
+}
+
+function Nebula2(props: any) {
+  const { scene } = useGLTF('/models/nebula2.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[-190, 400, 520]} // moved far away from other objects
+      scale={[30, 30, 30]}
+      rotation={[Math.PI * 0.3, Math.PI * 0.2, Math.PI * 0.3]}
+      {...props}
+    />
+  )
+}
+
+function Planet1(props: any) {
+  const { scene } = useGLTF('/models/planet1.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[60, -10, -130]}
+      scale={[1.5, 1.5, 1.5]}
+      rotation={[0, Math.PI * 0.3, 0]}
+      {...props}
+    />
+  )
+}
+
+function Planet2(props: any) {
+  const { scene } = useGLTF('/models/planet2.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[-60, -10, 150]}
+      scale={[1.2, 1.2, 1.2]}
+      rotation={[Math.PI * 0.2, Math.PI * 0.5, 0]}
+      {...props}
+    />
+  )
+}
+
+function Planet3(props: any) {
+  const { scene } = useGLTF('/models/planet3.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[150, -50, 20]}
+      scale={[1.2, 1.2, 1.2]}
+      rotation={[Math.PI * 0.1, Math.PI * 0.7, Math.PI * 0.2]}
+      {...props}
+    />
+  )
+}
+
+function Planet4(props: any) {
+  const { scene } = useGLTF('/models/planet4.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[-160, 15, 20]}
+      scale={[0.1, 0.1, 0.1]}
+      rotation={[Math.PI * 0.4, Math.PI * 0.2, Math.PI * 0.3]}
+      {...props}
+    />
+  )
+}
+
+function Moon(props: any) {
+  const { scene } = useGLTF('/models/moon.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[50, 10, 40]}
+      scale={[0.03, 0.03, 0.03]}
+      rotation={[0, Math.PI * 0.3, 0]}
+      {...props}
+    />
+  )
+}
+
+function Rocket(props: any) {
+  const { scene } = useGLTF('/models/rocket.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[-40, 50, 40]}
+      scale={[0.08, 0.08, 0.08]}
+      rotation={[12, Math.PI * 1.2, 0]}
+      {...props}
+    />
+  )
+}
+
+function Satellite(props: any) {
+  const { scene } = useGLTF('/models/satellite.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[60, 80, -75]}
+      scale={[0.2, 0.2, 0.2]}
+      rotation={[0, Math.PI * 1.2, 0]}
+      {...props}
+    />
+  )
+}
+
+function UFO(props: any) {
+  const { scene } = useGLTF('/models/ufo.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[5, -30, -80]}
+      scale={[0.01, 0.01, 0.01]}
+      rotation={[0, Math.PI * 0.5, 0]}
       {...props}
     />
   )
@@ -809,29 +1107,55 @@ export default function SpacePortfolio() {
               />
               <StarsPoints count={2200} />
               <LowPolyPlanetEarth position={[0, -2.7, 0]} scale={[2.2, 2.2, 2.2]} />
+              {/* Render all landmarks attached to the Earth */}
+              {LANDMARKS.map((lm, i) => (
+                <Landmark
+                  key={i}
+                  model={lm.model}
+                  position={lm.position}
+                  tab={lm.tab}
+                  onClick={openModal}
+                  scale={lm.scale}
+                  rotation={lm.rotation}
+                />
+              ))}
               <Galaxy />
               <Galaxy2 />
+              <Galaxy3 />
+              <Nebula />
+              <Nebula2 />
+              <Planet1 />
+              <Planet2 />
+              <Planet3 />
+              <Planet4 />
+              <Moon />
+              <Rocket />
+              <Satellite />
+              <UFO />
               <Asteroids />
               <Blackhole />
               <Goose />
-              {/* Lighting - always on and properly configured */}
-              <ambientLight intensity={0.4} />
-              <directionalLight position={[12, 18, 8]} intensity={1.3} color="#aee" castShadow />
-              <directionalLight position={[-8, -12, -10]} intensity={0.7} color="#7e8bf5" />
-              <ambientLight intensity={0.3} color="#1a0b2e" />
-              <pointLight position={[-12, 20, -60]} intensity={2.2} color="#9d4edd" distance={80} decay={1.5} />
-              <pointLight position={[36, -12, 80]} intensity={1.7} color="#7209b7" distance={70} decay={1.5} />
-              <pointLight position={[0, -65, 5]} intensity={3.0} color="#c77dff" distance={40} decay={1.8} />
-              <pointLight position={[0, -2.7, 0]} intensity={1.1} color="#4cc9f0" distance={12} decay={2} />
-              <directionalLight position={[-15, -8, -12]} intensity={0.3} color="#9d4edd" />
-              <directionalLight position={[8, -15, 8]} intensity={0.2} color="#6a4c93" />
+              {/* Improved lighting for vibrancy and brightness */}
+              <ambientLight intensity={0.62} color="#e0e7ff" />
+              <directionalLight position={[12, 18, 8]} intensity={2.8} color="#aee" castShadow />
+              <directionalLight position={[-8, -12, -10]} intensity={1.7} color="#7e8bf5" />
+              <directionalLight position={[0, 12, 12]} intensity={1.2} color="#ffe066" />
+              <directionalLight position={[0, -18, -12]} intensity={1.1} color="#ff6f91" />
+              <ambientLight intensity={0.45} color="#b8c0ff" />
+              <pointLight position={[-12, 20, -60]} intensity={3.2} color="#9d4edd" distance={120} decay={1.2} />
+              <pointLight position={[36, -12, 80]} intensity={2.7} color="#7209b7" distance={110} decay={1.2} />
+              <pointLight position={[0, -65, 5]} intensity={4.0} color="#c77dff" distance={60} decay={1.4} />
+              <pointLight position={[0, -2.7, 0]} intensity={2.2} color="#4cc9f0" distance={22} decay={1.7} />
+              <pointLight position={[0, 8, 0]} intensity={1.7} color="#ffe066" distance={18} decay={1.5} />
+              <directionalLight position={[-15, -8, -12]} intensity={0.7} color="#9d4edd" />
+              <directionalLight position={[8, -15, 8]} intensity={0.5} color="#6a4c93" />
               <spotLight
-                position={[0, 8, 6]}
-                angle={0.45}
-                penumbra={0.7}
-                intensity={2.2}
+                position={[0, 12, 8]}
+                angle={0.55}
+                penumbra={0.9}
+                intensity={3.2}
                 color="#fff8e1"
-                distance={18}
+                distance={28}
                 castShadow
                 target-position={[0, -2.7, 0]}
               />
