@@ -1072,7 +1072,7 @@ export default function SpacePortfolio() {
   const [postFXReady, setPostFXReady] = React.useState(false);
   React.useEffect(() => {
     if (!isLoading) {
-      const timer = setTimeout(() => setPostFXReady(true), 100);
+      const timer = setTimeout(() => setPostFXReady(true), 500);
       return () => clearTimeout(timer);
     } else {
       setPostFXReady(false);
