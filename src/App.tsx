@@ -1,5 +1,5 @@
-
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
+import { EffectComposer, Bloom, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
 useGLTF.preload('/models/black_hole.glb')
@@ -165,6 +165,8 @@ function CoordinateLandmark({
     }
   }, [scene, scale, ringConfig]);
 
+  // Add a yellow point light for the spotlight landmark only
+  const isSpotlight = model === '/models/spotlight.glb';
   return (
     <group position={position} rotation={rotation}>
       {/* Ring positioned relative to the landmark's local coordinate system */}
@@ -181,12 +183,20 @@ function CoordinateLandmark({
           depthWrite={false}
         />
       </mesh>
-      
+      {/* Add yellow point light for spotlight landmark */}
+      {isSpotlight && (
+        <pointLight
+          position={[0, 0.5, 0]}
+          intensity={1}
+          color="#ffe066"
+          distance={3.5}
+          decay={1.2}
+        />
+      )}
       {/* Highlight mesh */}
       {hovered && highlightScene && (
         <primitive object={highlightScene.clone()} scale={scale * 1.05} />
       )}
-      
       <primitive
         object={scene}
         scale={[scale, scale, scale]}
@@ -1308,6 +1318,13 @@ export default function SpacePortfolio() {
               className="w-full h-full"
               style={{ background: 'transparent' }}
             >
+              {/* Postprocessing effects: Vignette, Bloom, ChromaticAberration, HueSaturation */}
+              {/* @ts-ignore: Drei's EffectComposer types */}
+              <EffectComposer enableNormalPass={false}>
+                <Bloom intensity={0.18} luminanceThreshold={0.18} mipmapBlur />
+                <Vignette eskil={false} offset={0.18} darkness={0.38} />
+                <HueSaturation hue={0.0} saturation={0.1} />
+              </EffectComposer>
               <AnimatedCamera position={cameraPos} />
               {/* Typewriter animation - keep mounted until explosion is done */}
               {!isTypewriterDone && (
@@ -1360,20 +1377,20 @@ export default function SpacePortfolio() {
               <Asteroids />
               <Blackhole />
               <Goose />
-              {/* Improved lighting for vibrancy and brightness */}
-              <ambientLight intensity={0.62} color="#e0e7ff" />
-              <directionalLight position={[12, 18, 8]} intensity={2.8} color="#aee" castShadow />
-              <directionalLight position={[-8, -12, -10]} intensity={1.7} color="#7e8bf5" />
-              <directionalLight position={[0, 12, 12]} intensity={1.2} color="#ffe066" />
-              <directionalLight position={[0, -18, -12]} intensity={1.1} color="#ff6f91" />
-              <ambientLight intensity={0.45} color="#b8c0ff" />
-              <pointLight position={[-12, 20, -60]} intensity={3.2} color="#9d4edd" distance={120} decay={1.2} />
-              <pointLight position={[36, -12, 80]} intensity={2.7} color="#7209b7" distance={110} decay={1.2} />
-              <pointLight position={[0, -65, 5]} intensity={4.0} color="#c77dff" distance={60} decay={1.4} />
-              <pointLight position={[0, -2.7, 0]} intensity={2.2} color="#4cc9f0" distance={22} decay={1.7} />
-              <pointLight position={[0, 8, 0]} intensity={1.7} color="#ffe066" distance={18} decay={1.5} />
-              <directionalLight position={[-15, -8, -12]} intensity={0.7} color="#9d4edd" />
-              <directionalLight position={[8, -15, 8]} intensity={0.5} color="#6a4c93" />
+              {/* Improved lighting for vibrancy and brightness - brightened for earth */}
+              <ambientLight intensity={0.82} color="#e0e7ff" />
+              <directionalLight position={[18, 28, 18]} intensity={1.7} color="#aee" castShadow />
+              <directionalLight position={[-18, -22, -18]} intensity={0.7} color="#7e8bf5" />
+              <directionalLight position={[0, 12, 12]} intensity={1.45} color="#ffe066" />
+              <directionalLight position={[0, -18, -12]} intensity={1.25} color="#ff6f91" />
+              <ambientLight intensity={0.48} color="#b8c0ff" />
+              <pointLight position={[-32, 40, -120]} intensity={1.0} color="#9d4edd" distance={180} decay={1.2} />
+              <pointLight position={[72, -24, 160]} intensity={0.7} color="#7209b7" distance={180} decay={1.2} />
+              <pointLight position={[0, -130, 10]} intensity={1.1} color="#c77dff" distance={120} decay={1.4} />
+              <pointLight position={[0, -2.7, 0]} intensity={2.7} color="#4cc9f0" distance={22} decay={1.7} />
+              <pointLight position={[0, 8, 0]} intensity={2.1} color="#ffe066" distance={18} decay={1.5} />
+              <directionalLight position={[-30, -16, -24]} intensity={0.15} color="#9d4edd" />
+              <directionalLight position={[16, -30, 16]} intensity={0.1} color="#6a4c93" />
               <spotLight
                 position={[0, 12, 8]}
                 angle={0.55}
