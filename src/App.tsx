@@ -1068,11 +1068,20 @@ function LoadingScreen({ isVisible }: { isVisible: boolean }) {
 }
 
 export default function SpacePortfolio() {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [postFXReady, setPostFXReady] = React.useState(false);
+  React.useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => setPostFXReady(true), 100);
+      return () => clearTimeout(timer);
+    } else {
+      setPostFXReady(false);
+    }
+  }, [isLoading]);
   const [activeModal, setActiveModal] = React.useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [showModal, setShowModal] = React.useState(false)
   const [autoRotate, setAutoRotate] = React.useState(false)
-  const [isLoading, setIsLoading] = React.useState(true)
   const interactionTimeout = React.useRef<number | null>(null)
   const controlsRef = React.useRef<any>(null)
 
@@ -1338,7 +1347,7 @@ export default function SpacePortfolio() {
               style={{ background: 'transparent' }}
             >
               {/* @ts-ignore: Drei's EffectComposer types */}
-              {(!isLoading) && (
+              {postFXReady && (
                 <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
                   <Bloom intensity={0.15} luminanceThreshold={0.2}/>
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
