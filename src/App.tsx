@@ -823,7 +823,7 @@ function Galaxy3(props: any) {
     <primitive
       object={scene}
       position={[190, 80, -30]}
-      scale={[0.05, 0.05, 0.05]}
+      scale={[0.9, 0.9, 0.9]}
       rotation={[10, Math.PI * 0.2, 15]}
       {...props}
     />
