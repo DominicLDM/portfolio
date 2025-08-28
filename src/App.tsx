@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
-import { EffectComposer, Vignette, HueSaturation } from '@react-three/postprocessing'
+import { EffectComposer, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
@@ -1339,8 +1339,7 @@ export default function SpacePortfolio() {
             >
               {/* Postprocessing effects: Vignette, Bloom, ChromaticAberration, HueSaturation */}
               {/* @ts-ignore: Drei's EffectComposer types */}
-              <EffectComposer enableNormalPass={false} resolutionScale={1}>
-                <Vignette eskil={false} offset={0.18} darkness={0.38} />
+              <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
                 <HueSaturation hue={0.0} saturation={0.1} />
               </EffectComposer>
               <AnimatedCamera position={cameraPos} />
