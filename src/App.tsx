@@ -1339,7 +1339,7 @@ export default function SpacePortfolio() {
             >
               {/* Postprocessing effects: Vignette, Bloom, ChromaticAberration, HueSaturation */}
               {/* @ts-ignore: Drei's EffectComposer types */}
-              <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
+              <EffectComposer enableNormalPass={false} resolutionScale={1}>
                 <Vignette eskil={false} offset={0.18} darkness={0.38} />
                 <HueSaturation hue={0.0} saturation={0.1} />
               </EffectComposer>
