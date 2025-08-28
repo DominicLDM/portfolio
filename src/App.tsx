@@ -13,6 +13,12 @@ import LowPolyPlanetEarth from './models/LowPolyPlanetEarth'
 // Utility functions for coordinate conversion
 const DEG_TO_RAD = Math.PI / 180;
 
+declare global {
+  interface Window {
+    __typewriterInitialDelay?: number;
+  }
+}
+
 function latLonToPosition(
   lat: number, 
   lon: number, 
@@ -567,7 +573,12 @@ function Typewriter3D({ onExplodeStart }: {
     const char = isTopLine ? topLetters[charIndex] : bottomLetters[charIndex]
 
     if (visibleIndex === 0) {
-      delay = 2200 // Initial pause before first letter
+      // Wait for loading to finish, then 500ms
+      if (window.__typewriterInitialDelay) {
+        delay = window.__typewriterInitialDelay;
+      } else {
+        delay = 2200;
+      }
     } else if (visibleIndex === 3) {
       delay = 500 // Pause after 'Hi,'
     } else {
@@ -777,6 +788,11 @@ function Blackhole(props: any) {
 
 function Galaxy2(props: any) {
   const { scene } = useGLTF('/models/galaxy2.glb')
+  useEffect(() => {
+    if (scene && props.onLoaded) {
+      props.onLoaded();
+    }
+  }, [scene, props.onLoaded]);
   return (
     <primitive
       object={scene}
@@ -1072,14 +1088,6 @@ export default function SpacePortfolio() {
   const [cameraPos, setCameraPos] = React.useState<[number, number, number]>([0, 0, initialCameraZ])
   const [cameraTarget] = React.useState<[number, number, number]>([0, 0, 0])
 
-  // Simulate loading time
-  React.useEffect(() => {
-    const loadingTimer = setTimeout(() => {
-      setIsLoading(false)
-    }, 2000)
-    return () => clearTimeout(loadingTimer)
-  }, [])
-
   // Start camera zoom with proper delay after explosion starts
   function handleExplodeStart() {
     // Give the explosion 0.4 seconds to establish before starting camera movement
@@ -1203,6 +1211,22 @@ export default function SpacePortfolio() {
     }, 3000)
   }
 
+  const [earthLoaded, setEarthLoaded] = React.useState(false);
+  const [galaxy2Loaded, setGalaxy2Loaded] = React.useState(false);
+
+  React.useEffect(() => {
+    if (earthLoaded && galaxy2Loaded) {
+      setIsLoading(false);
+    }
+  }, [earthLoaded, galaxy2Loaded]);
+
+  // Set typewriter initial delay after loading
+  useEffect(() => {
+    if (!isLoading) {
+      window.__typewriterInitialDelay = 700;
+    }
+  }, [isLoading]);
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <LoadingScreen isVisible={isLoading} />
@@ -1219,7 +1243,7 @@ export default function SpacePortfolio() {
                      style={{ 
                        fontFamily: "'PlanetoidX', 'Orbitron', 'Montserrat', 'Poppins', sans-serif"
                      }}>
-                  Dominic
+                  Dominic LDM
                 </div>
               </div>
               
@@ -1339,7 +1363,11 @@ export default function SpacePortfolio() {
                 speed={0.5}
               />
               <StarsPoints count={2200} />
-              <LowPolyPlanetEarth position={[0, -2.7, 0]} scale={[2.2, 2.2, 2.2]} />
+              <LowPolyPlanetEarth
+                position={[0, -2.7, 0]}
+                scale={[2.2, 2.2, 2.2]}
+                onLoaded={() => setEarthLoaded(true)}
+              />
               {/* Render all landmarks using coordinate system */}
               {COORDINATE_LANDMARKS.map((lm, i) => (
                 <CoordinateLandmark
@@ -1357,7 +1385,7 @@ export default function SpacePortfolio() {
                 />
               ))}
               <Galaxy />
-              <Galaxy2 />
+              <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />
               <Galaxy3 />
               <Nebula />
               <Nebula2 />
