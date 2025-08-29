@@ -70,6 +70,7 @@ type LandmarkCoordinateData = {
   heightOffset?: number; // Additional height above surface
   customRotation?: [number, number, number]; // Custom rotation override in radians [x, y, z]
   ringConfig?: RingConfig; // Custom ring configuration
+  globeRadius?: number; // Optional globe radius for landmark
 };
 
 // Landmark component with coordinate-based positioning and customizable rings
@@ -577,7 +578,7 @@ function Typewriter3D({ onExplodeStart }: {
       if (window.__typewriterInitialDelay) {
         delay = window.__typewriterInitialDelay;
       } else {
-        delay = 2200;
+        delay = 2000;
       }
     } else if (visibleIndex === 3) {
       delay = 500 // Pause after 'Hi,'
@@ -1068,6 +1069,92 @@ function LoadingScreen({ isVisible }: { isVisible: boolean }) {
 }
 
 export default function SpacePortfolio() {
+  // Hobbies state
+  const hobbyTabs = ['music', 'theatre', 'photos', 'cities', 'gaming', 'skiing']
+  const [hobbyOrder, setHobbyOrder] = React.useState<string[]>([])
+  const [hobbyIndex, setHobbyIndex] = React.useState(0)
+
+  // Social links
+  const socialLinks = [
+    { href: 'https://instagram.com/dom_ldm', icon: 'instagram', label: 'Instagram' },
+    { href: 'https://www.linkedin.com/in/dominic-ldm/', icon: 'linkedin', label: 'LinkedIn' },
+    { href: 'mailto:dlemoine@uwaterloo.ca', icon: 'mail', label: 'Email' },
+    { href: 'https://github.com/DominicLDM', icon: 'github', label: 'GitHub' },
+  ];
+
+// AboutMe component
+function AboutMe() {
+  return (
+    <section className="px-2 sm:px-4 md:pr-6 md:pl-0 max-w-6xl w-full">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 md:gap-8 items-center sm:items-start px-0 md:pr-4">
+        {/* Image - shows on top for mobile, left side for desktop */}
+        <div className="flex justify-center items-center w-full sm:w-1/2 xl:w-1/2 min-h-[160px] sm:min-h-[260px] order-1 sm:order-1 px-0 mt-2 sm:mt-0">
+          <img
+            src="/images/about me2.jpg"
+            alt="Dominic Lemoine de Martigny"
+            className="w-full h-auto rounded-2xl object-contain shadow-[0_6px_32px_0_rgba(126,139,245,0.18)] bg-transparent"
+            style={{ maxHeight: '320px', maxWidth: '100%' }}
+          />
+        </div>
+        
+        {/* Content - shows below image on mobile, right side on desktop */}
+        <div className="flex-1 text-left order-2 sm:order-2 w-full sm:w-1/2 xl:w-1/2 px-0">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-3 sm:mb-4 md:mb-6">
+            About me
+          </h2>
+          
+          <div className="text-sm sm:text-base md:text-lg leading-relaxed text-white/90 mb-4 sm:mb-6 md:mb-8 space-y-2 sm:space-y-4">
+            <p>
+              Hi there! My name is Dominic Lemoine de Martigny. I'm a{' '}
+              <span className="font-semibold text-purple-300">Software Engineering</span>{' '}
+              student at the <span className="italic text-purple-200">University of Waterloo</span>.
+            </p>
+            
+            <p>
+              In my spare time, I also enjoy{' '}
+              <span className="font-semibold text-purple-200">musical theatre</span>,{' '}
+              <span className="font-semibold text-purple-200">e-sports</span>, and{' '}
+              <span className="font-semibold text-purple-200">taking fun photos</span>!
+            </p>
+            
+            <p>
+              Feel free to contact me, and thanks for checking out my site :D
+            </p>
+          </div>
+          
+          {/* Social Links */}
+          <div className="flex pb-2 sm:pb-0 justify-start gap-3 sm:gap-4 mt-2 sm:mt-4">
+            {socialLinks.map(link => (
+              <a
+                key={link.icon}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                className="p-1.5 sm:p-2 rounded-full border border-white/20 text-white/80 hover:text-purple-300 hover:border-purple-300/50 hover:bg-purple-500/10 transition-all duration-300 group"
+              >
+                <div className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300">
+                  {link.icon === 'instagram' && (
+                    <svg fill="currentColor" viewBox="0 0 24 24" className="w-full h-full"><path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5zm4.25 3.25a5.25 5.25 0 1 1 0 10.5 5.25 5.25 0 0 1 0-10.5zm0 1.5a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5zm5.25.75a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                  )}
+                  {link.icon === 'linkedin' && (
+                    <svg fill="currentColor" viewBox="0 0 24 24" className="w-full h-full"><path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.25c-.97 0-1.75-.78-1.75-1.75s.78-1.75 1.75-1.75 1.75.78 1.75 1.75-.78 1.75-1.75 1.75zm13.5 11.25h-3v-5.5c0-1.1-.9-2-2-2s-2 .9-2 2v5.5h-3v-10h3v1.25c.41-.59 1.36-1.25 2.5-1.25 2.21 0 4 1.79 4 4v6z"/></svg>
+                  )}
+                  {link.icon === 'mail' && (
+                    <svg fill="currentColor" viewBox="0 0 24 24" className="w-full h-full"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2v.01L12 13 4 6.01V6h16zm-16 12V8.99l8 6.99 8-6.99V18H4z"/></svg>
+                  )}
+                  {link.icon === 'github' && (
+                    <svg fill="currentColor" viewBox="0 0 24 24" className="w-full h-full"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.66-.22.66-.48 0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.1-1.46-1.1-1.46-.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.115 2.51.337 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.16.58.67.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
   // Detect mobile device
   const isMobile = useMemo(() => {
     const ua = window.navigator.userAgent;
@@ -1151,14 +1238,118 @@ export default function SpacePortfolio() {
     if (activeModal) {
       setShowModal(false)
       setTimeout(() => setShowModal(true), 10)
+      setAutoRotate(false)
+      if (interactionTimeout.current) {
+        clearTimeout(interactionTimeout.current)
+        interactionTimeout.current = null
+      }
     } else {
       setShowModal(false)
+      setAutoRotate(true)
     }
   }, [activeModal])
 
+  // Get landmark position by tab name
+  function getLandmarkPosition(tab: string) {
+    const landmark = COORDINATE_LANDMARKS.find(lm => lm.tab === tab)
+    if (!landmark) return null
+    // Use landmark's globeRadius and heightOffset if available
+    const globeRadius = landmark.globeRadius || 2.2
+    const heightOffset = landmark.heightOffset || 0
+    return latLonToPosition(landmark.lat, landmark.lon, globeRadius, heightOffset)
+  }
+
+
+  // Animate camera to a position, then open modal
+  function flyToLandmarkAndOpenModal(section: string) {
+    const pos = getLandmarkPosition(section)
+    if (!pos) {
+      setActiveModal(section)
+      setIsMobileMenuOpen(false)
+      return
+    }
+    // Camera offset: move back along the vector from origin to landmark
+    let offsetDistance = 3.2
+    const norm = Math.sqrt(pos[0]**2 + pos[1]**2 + pos[2]**2)
+    const offset = [
+      pos[0] / norm * offsetDistance,
+      pos[1] / norm * offsetDistance,
+      pos[2] / norm * offsetDistance,
+    ]
+    const endPos: [number, number, number] = [
+      pos[0] + offset[0],
+      pos[1] + offset[1],
+      pos[2] + offset[2],
+    ]
+    // Get the actual camera position from Three.js
+    let startPos: [number, number, number] = [0, 0, 0]
+    if (controlsRef.current && controlsRef.current.object) {
+      const cam = controlsRef.current.object
+      startPos = [cam.position.x, cam.position.y, cam.position.z]
+    } else {
+      startPos = endPos // fallback if camera not available
+    }
+    const duration = 1.2
+    const fps = 60
+    const totalFrames = duration * fps
+    let frame = 0
+    function smoothstep(x: number): number { return x * x * (3 - 2 * x) }
+    function animate() {
+      frame++
+      const linearAlpha = Math.min(1, frame / totalFrames)
+      const alpha = smoothstep(linearAlpha)
+      const newPos: [number, number, number] = [
+        startPos[0] + (endPos[0] - startPos[0]) * alpha,
+        startPos[1] + (endPos[1] - startPos[1]) * alpha,
+        startPos[2] + (endPos[2] - startPos[2]) * alpha,
+      ]
+      setCameraPos(newPos)
+      if (linearAlpha < 1) {
+        requestAnimationFrame(animate)
+      } else {
+        setCameraPos(endPos)
+        setActiveModal(section)
+        setIsMobileMenuOpen(false)
+      }
+    }
+    animate()
+  }
+
   const openModal = (section: string) => {
-    setActiveModal(section)
-    setIsMobileMenuOpen(false)
+    const doOpen = () => {
+      if (section === 'about') {
+        flyToLandmarkAndOpenModal('about')
+      } else if (section === 'experience') {
+        flyToLandmarkAndOpenModal('experience')
+      } else if (section === 'projects') {
+        flyToLandmarkAndOpenModal('projects')
+      } else if (section === 'hobbies') {
+        if (hobbyOrder.length === 0) {
+          const shuffled = [...hobbyTabs].sort(() => Math.random() - 0.5)
+          setHobbyOrder(shuffled)
+          setHobbyIndex(0)
+          flyToLandmarkAndOpenModal(shuffled[0])
+        } else {
+          const nextIndex = (hobbyIndex + 1) % hobbyOrder.length
+          setHobbyIndex(nextIndex)
+          flyToLandmarkAndOpenModal(hobbyOrder[nextIndex])
+        }
+        setActiveModal('hobbies')
+        setIsMobileMenuOpen(false)
+      } else {
+        setActiveModal(section)
+        setIsMobileMenuOpen(false)
+      }
+    }
+    if (activeModal) {
+      setShowModal(false)
+      setTimeout(() => {
+        setActiveModal(null)
+        doOpen()
+      }, 300)
+      return
+    }
+    doOpen()
   }
 
   const closeModal = () => {
@@ -1210,10 +1401,16 @@ export default function SpacePortfolio() {
   }
 
   const handleInteractionEnd = () => {
-    if (interactionTimeout.current) clearTimeout(interactionTimeout.current)
-    interactionTimeout.current = setTimeout(() => {
-      setAutoRotate(true)
-    }, 3000)
+    if (interactionTimeout.current) {
+      clearTimeout(interactionTimeout.current)
+      interactionTimeout.current = null
+    }
+    if (!activeModal) {
+      interactionTimeout.current = setTimeout(() => {
+        setAutoRotate(true)
+        interactionTimeout.current = null
+      }, 3000)
+    }
   }
 
   const [earthLoaded, setEarthLoaded] = React.useState(false);
@@ -1228,7 +1425,7 @@ export default function SpacePortfolio() {
   // Set typewriter initial delay after loading
   useEffect(() => {
     if (!isLoading) {
-      window.__typewriterInitialDelay = 700;
+      window.__typewriterInitialDelay = 500;
     }
   }, [isLoading]);
 
@@ -1244,7 +1441,7 @@ export default function SpacePortfolio() {
           <div className="max-w-7xl mx-auto px-6 py-3">
             <div className="flex items-center justify-between">
               <div className="relative group">
-                <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-300 tracking-wider transition-all duration-500 cursor-default select-none mt-2 mb-2"
+                <div className="text-3xl font-black text-[#edeafd] hover:text-[#7e8bf5] tracking-wider transition-all duration-500 cursor-default select-none mt-2 mb-2"
                      style={{ 
                        fontFamily: "'PlanetoidX', 'Orbitron', 'Montserrat', 'Poppins', sans-serif"
                      }}>
@@ -1460,54 +1657,49 @@ export default function SpacePortfolio() {
       {/* Modal popups */}
       {activeModal && (
         <div 
-          className={`fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm transition-opacity duration-500 ${showModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+          className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-500 ${showModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          style={{ backgroundColor: 'rgba(120, 110, 255, 0.08)', backdropFilter: 'blur(12px)' }}
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
-          <div className={`bg-gradient-to-br from-purple-900/90 via-indigo-900/90 to-purple-800/90 backdrop-blur-md border border-purple-400/20 rounded-2xl p-8 max-w-2xl w-full mx-4 relative shadow-lg transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}>
+          <div 
+            className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 md:p-8 max-w-4xl max-h-[80vh] w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
+          > 
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 text-purple-200 hover:text-purple-100 transition-all duration-300 hover:rotate-90 z-10 cursor-pointer"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-indigo-200 hover:text-indigo-100 transition-all duration-300 hover:rotate-90 z-10 cursor-pointer"
             >
               <X size={24} />
             </button>
 
             <div className={`transition-all duration-700 delay-100 ${showModal ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
               {activeModal === "about" && (
-                <div>
-                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 mb-6">
-                    About Me
-                  </h2>
-                  <div className="text-purple-100 space-y-4 leading-relaxed">
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam euismod, urna eu tincidunt consectetur, nisi nisl aliquam enim, euismod tincidunt nisi nisl euismod.</p>
-                    <p>Morbi non urna euismod, tincidunt nisi eu, aliquam enim. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
-                  </div>
-                </div>
+                <AboutMe />
               )}
 
-              {activeModal === "experience" && (
-                <div>
-                  <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 mb-6">
-                    Experience
-                  </h2>
-                  <div className="text-purple-100 space-y-6">
-                    <div className="border-l-2 border-purple-400/60 pl-6 hover:border-pink-300/60 transition-all duration-300 group cursor-pointer">
-                      <h3 className="text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">Lorem Ipsum</h3>
-                      <p className="text-purple-300 text-lg">Lorem Company • 2022 - Present</p>
-                      <p className="mt-3 leading-relaxed">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam euismod, urna eu tincidunt consectetur, nisi nisl aliquam enim.
-                      </p>
-                    </div>
-                    <div className="border-l-2 border-purple-400/60 pl-6 hover:border-pink-300/60 transition-all duration-300 group cursor-pointer">
-                      <h3 className="text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">Dolor Sit</h3>
-                      <p className="text-purple-300 text-lg">Ipsum Startup • 2020 - 2022</p>
-                      <p className="mt-3 leading-relaxed">
-                        Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+
+        {activeModal === "experience" && (
+          <div className="px-4 sm:px-8 md:px-12 lg:px-20 max-w-6xl sm:pt-2 w-full h-full overflow-y-auto">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4 sm:mb-6 md:mb-8 text-center sm:text-left">
+              Experience
+            </h2>
+            <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 items-stretch">
+              <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 hover:border-pink-300/60 transition-all duration-300 group">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Engineer Intern</h3>
+                <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">ALS Geoanalytics • May 2025 - Aug 2025</p>
+                <p className="leading-relaxed text-white/90 text-sm sm:text-base">
+                  Built a full-stack geoanalytics platform with AI-driven data processing, cloud-native architecture, and real-time dashboards, streamlining geoscience document analysis and cutting data labeling time from minutes to seconds.
+                </p>
+              </div>
+              <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 mb-6 hover:border-pink-300/60 transition-all duration-300 group">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Developer</h3>
+                <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">GCE Global • Jun 2024 - Aug 2024</p>
+                <p className="leading-relaxed text-white/90 text-sm sm:text-base">
+                  Modernized a legacy website and built AI-powered tools to streamline legal research and document analysis.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
               {activeModal === "projects" && (
                 <div>
