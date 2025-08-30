@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
+import { Github, ChevronLeft, ChevronRight, ExternalLink, Play, Pause, Music } from 'lucide-react'
 import { EffectComposer, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
@@ -17,6 +18,417 @@ declare global {
   interface Window {
     __typewriterInitialDelay?: number;
   }
+}
+
+// Hobby data types
+type HobbyKey = 'music' | 'theatre' | 'photos' | 'cities' | 'gaming' | 'skiing';
+type HobbyInfo = {
+  title: string;
+  images: string[];
+  description: string;
+  special?: boolean;
+  imageDescriptions?: string[];
+  spotifyData?: {
+    profileUrl: string;
+    recentTracks: {
+      name: string;
+      artist: string;
+      album: string;
+      embedId: string;
+    }[];
+    stats: {
+      topGenre: string;
+      hoursListened: number;
+      topArtist: string;
+    };
+  };
+};
+const hobbyData: Record<HobbyKey, HobbyInfo> = {
+  music: {
+    title: 'Music',
+    images: ['/images/headphones1.jpg', '/images/headphones2.jpg'],
+    description: 'Creating and experiencing music through various mediums.',
+    imageDescriptions: ['Studio setup with premium headphones', 'Live performance equipment'],
+    special: true,
+    spotifyData: {
+      profileUrl: 'https://open.spotify.com/user/dominicldm',
+      recentTracks: [
+        {
+          name: "Bohemian Rhapsody",
+          artist: "Queen", 
+          album: "A Night at the Opera",
+          embedId: "4u7EnebtmKI"
+        },
+        {
+          name: "Stairway to Heaven",
+          artist: "Led Zeppelin",
+          album: "Led Zeppelin IV", 
+          embedId: "QkF3oxziUI4"
+        }
+      ],
+      stats: {
+        topGenre: "Rock",
+        hoursListened: 247,
+        topArtist: "Queen"
+      }
+    }
+  },
+  theatre: {
+    title: 'Theatre',
+    images: ['/bway/playbillwall.jpg', '/bway/hadestown2.jpg', '/bway/parade.jpg', '/bway/kimberly.jpg', '/bway/sweeney.jpg', '/bway/gaten.jpg', '/bway/strange loop.jpg', '/bway/comefromaway.jpg', '/bway/hadestown1.jpg', '/bway/mormon.jpg', '/bway/beetlejuice.jpg', '/bway/signedhadestown.jpg', '/bway/signedkim.jpg'],
+    description: "I LOVE musical theatre! I've seen 9 shows on Broadway, and the magic never fades!",
+    imageDescriptions: [
+      'My Playbill wall!! My favs are Hadestown, Fun Home, and Amélie!',
+      'My first time at Hadestown, jaw-droppingly good.',
+      'Parade!! Ben Platt and Micaela Diamond are PHENOMENAL.',
+      'Kimberly Akimbo, the only show to make me want to live in New Jersey.',
+      'Sweeney Todd with the incredible Josh Groban! Absolutely stacked cast.',
+      'Gaten Matarazzo signing my Playbill!!',
+      'A Strange Loop. So strange, so powerful, so Broadway.',
+      'Come From Away, so so so heartwarming!',
+      'Hadestown again, (can you tell I love this show)',
+      'I believeeee that the Book of Mormon is a tad silly.',
+      'Beetlejuice Beetlejuice Beetlejuice.',
+      'Signed Hadestown Playbill!!',
+      'Signed Kimberly Akimbo Playbill!!'
+      
+    ]
+  },
+  photos: {
+    title: 'Photography',
+    images: ['/images/photo1.jpg', '/images/photo2.jpg'],
+    description: 'Capturing moments and perspectives through the lens.',
+    imageDescriptions: [
+      'Golden hour cityscape from rooftop',
+      'Street photography in old town'
+    ]
+  },
+  cities: {
+    title: 'Urban Exploration',
+    images: ['/images/city1.jpg', '/images/city2.jpg'],
+    description: 'Discovering the unique character and hidden gems of urban landscapes.',
+    imageDescriptions: [
+      'Downtown skyline during blue hour',
+      'Historic district cobblestone streets'
+    ]
+  },
+  gaming: {
+    title: 'Gaming',
+    images: ['/images/gaming1.jpg', '/images/gaming2.jpg'],
+    description: 'Competitive gaming and exploring interactive digital worlds.',
+    imageDescriptions: [
+      'Tournament setup with dual monitors',
+      'Victory celebration after ranked match'
+    ]
+  },
+  skiing: {
+    title: 'Skiing',
+    images: ['/images/skiing1.jpg', '/images/skiing2.jpg'],
+    description: 'Carving through fresh powder and embracing winter adventures.',
+    imageDescriptions: [
+      'Fresh tracks on untouched slopes',
+      'Sunset run down the mountain'
+    ]
+  }
+}
+
+function AdaptiveImageGallery({ 
+  images, 
+  descriptions, 
+  title 
+}: {
+  images: string[];
+  descriptions: string[];
+  title: string;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<{width: number, height: number} | null>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Get container dimensions and update on resize
+  useEffect(() => {
+    const updateContainerSize = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        setContainerSize({ width, height });
+      }
+    };
+
+    updateContainerSize();
+    window.addEventListener('resize', updateContainerSize);
+    
+    return () => window.removeEventListener('resize', updateContainerSize);
+  }, []);
+
+  // Load current image dimensions
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setImageDimensions({ width: img.width, height: img.height });
+    };
+    img.src = images[currentIndex];
+  }, [images, currentIndex]);
+
+  const nextImage = () => {
+    if (isTransitioning || images.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 200);
+  };
+
+  const prevImage = () => {
+    if (isTransitioning || images.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 200);
+  };
+
+  // Calculate image size that fits in container while preserving aspect ratio
+  const imageSize = useMemo(() => {
+    if (!imageDimensions || containerSize.width === 0 || containerSize.height === 0) {
+      return { width: 'auto', height: 'auto' };
+    }
+    
+    const { width: imgWidth, height: imgHeight } = imageDimensions;
+    const aspectRatio = imgWidth / imgHeight;
+    
+    // Calculate maximum dimensions based on container size
+    const maxWidth = containerSize.width;
+    const maxHeight = containerSize.height - 60; // Reserve space for description
+    
+    // Calculate size that fits while preserving aspect ratio
+    let finalWidth = maxWidth;
+    let finalHeight = finalWidth / aspectRatio;
+    
+    if (finalHeight > maxHeight) {
+      finalHeight = maxHeight;
+      finalWidth = finalHeight * aspectRatio;
+    }
+    
+    return {
+      width: finalWidth,
+      height: finalHeight
+    };
+  }, [imageDimensions, containerSize]);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative w-full h-full max-h-[calc(90vh-160px)] flex flex-col items-center justify-center"
+      style={{ maxWidth: '90vw' }}
+    >
+      {/* Navigation and image container */}
+      <div className="flex items-center justify-center gap-4">
+        {/* Left Arrow */}
+        <button
+          onClick={prevImage}
+          disabled={isTransitioning || images.length <= 1}
+          className={`p-3 bg-black/40 hover:bg-black/60 border border-white/20 hover:border-purple-300/50 rounded-full text-white/80 hover:text-purple-200 transition-all duration-300 backdrop-blur-sm ${
+            isTransitioning || images.length <= 1 
+              ? 'opacity-50 cursor-not-allowed' 
+              : 'hover:scale-110 cursor-pointer'
+          }`}
+        >
+          <ChevronLeft size={24} />
+        </button>
+
+        {/* Image container - size matches the image exactly */}
+        <div 
+          className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-400/30 transition-all duration-500 flex items-center justify-center"
+          style={{
+            width: `${imageSize.width}px`,
+            height: `${imageSize.height}px`,
+            minWidth: '200px',
+            minHeight: '150px'
+          }}
+        >
+          <img
+            src={images[currentIndex]}
+            alt={`${title} - ${descriptions[currentIndex] || 'Image'}`}
+            className={`w-full h-full object-contain transition-all duration-400 ease-in-out ${
+              isTransitioning 
+                ? 'opacity-0 scale-105' 
+                : 'opacity-100 scale-100'
+            }`}
+          />
+
+          {/* Image counter */}
+          {images.length > 1 && (
+            <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 text-white/90 text-sm font-medium">
+              {currentIndex + 1} / {images.length}
+            </div>
+          )}
+        </div>
+
+        {/* Right Arrow */}
+        <button
+          onClick={nextImage}
+          disabled={isTransitioning || images.length <= 1}
+          className={`p-3 bg-black/40 hover:bg-black/60 border border-white/20 hover:border-purple-300/50 rounded-full text-white/80 hover:text-purple-200 transition-all duration-300 backdrop-blur-sm ${
+            isTransitioning || images.length <= 1 
+              ? 'opacity-50 cursor-not-allowed' 
+              : 'hover:scale-110 cursor-pointer'
+          }`}
+        >
+          <ChevronRight size={24} />
+        </button>
+      </div>
+
+      {/* Image description */}
+      <div className="mt-4 text-center px-2">
+        <p className="text-purple-200/90 text-base leading-relaxed max-w-4xl mx-auto">
+          {descriptions[currentIndex] || `${title} image ${currentIndex + 1}`}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Spotify Integration Component
+function SpotifySection({ spotifyData }: { spotifyData: any }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Spotify branding */}
+      <div className="text-center">
+        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/20 to-green-400/20 border border-green-400/30 rounded-2xl px-6 py-4 mb-4">
+          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+            <Music size={16} className="text-white" />
+          </div>
+          <h3 className="text-xl font-semibold text-green-300">Now Playing on Spotify</h3>
+        </div>
+        {/* Spotify profile link */}
+        <a
+          href={spotifyData.profileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-green-300 hover:text-green-200 transition-colors duration-300 text-sm group"
+        >
+          Follow my Spotify profile
+          <ExternalLink size={14} className="group-hover:scale-110 transition-transform duration-200" />
+        </a>
+      </div>
+
+      {/* Music Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border border-purple-400/30 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-purple-200">{spotifyData.stats.hoursListened}</div>
+          <div className="text-purple-300/80 text-sm">Hours Listened</div>
+        </div>
+        <div className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border border-purple-400/30 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-purple-200">{spotifyData.stats.topGenre}</div>
+          <div className="text-purple-300/80 text-sm">Top Genre</div>
+        </div>
+        <div className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border border-purple-400/30 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-purple-200">{spotifyData.stats.topArtist}</div>
+          <div className="text-purple-300/80 text-sm">Top Artist</div>
+        </div>
+      </div>
+
+      {/* Recent Tracks */}
+      <div className="space-y-4">
+        <h4 className="text-lg font-semibold text-purple-200 text-center">Recent Favorites</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {spotifyData.recentTracks.map((track: any, index: number) => (
+            <div
+              key={index}
+              className="bg-gradient-to-br from-gray-900/60 to-purple-900/40 border border-purple-400/20 hover:border-green-400/40 rounded-xl p-4 transition-all duration-300 group hover:scale-102 hover:shadow-lg hover:shadow-purple-500/20"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-purple-500 rounded-lg flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                  <Music size={20} className="text-white relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-purple-400/20 group-hover:from-green-400/40 group-hover:to-purple-400/40 transition-all duration-300"></div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h5 className="text-white font-semibold truncate group-hover:text-green-200 transition-colors duration-300">
+                    {track.name}
+                  </h5>
+                  <p className="text-purple-300 text-sm truncate">{track.artist}</p>
+                  <p className="text-purple-400/80 text-xs truncate">{track.album}</p>
+                </div>
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-400/30 hover:border-green-400/50 rounded-full text-green-300 hover:text-green-200 transition-all duration-300"
+                >
+                  {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// HobbiesModal component
+function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
+  const data = hobbyData[hobby];
+  if (!data) return null;
+
+  if (data.special) {
+    // Enhanced Spotify/Music template
+    return (
+      <div className="px-4 sm:px-6 md:px-8 lg:px-12 max-w-6xl w-full h-full overflow-y-auto">
+        <div className="space-y-8">
+          {/* Title with cosmic styling */}
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
+              {data.title}
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-purple-400 to-pink-400 mx-auto rounded-full mb-6"></div>
+            <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
+              {data.description}
+            </p>
+          </div>
+
+          {/* Spotify Integration */}
+          <SpotifySection spotifyData={data.spotifyData} />
+
+          {/* Image Gallery */}
+          <div className="space-y-4">
+            <h4 className="text-xl font-semibold text-purple-200 text-center">Setup & Gear</h4>
+            <AdaptiveImageGallery 
+              images={data.images}
+              descriptions={data.imageDescriptions || []}
+              title={data.title}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Enhanced template for other hobbies
+  return (
+    <div className="px-4 sm:px-6 md:px-8 lg:px-12 max-w-6xl w-full h-full overflow-y-auto">
+      <div className="space-y-6">
+        {/* Enhanced title section */}
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
+            {data.title}
+          </h2>
+          <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
+            {data.description}
+          </p>
+        </div>
+
+        {/* Image Gallery */}
+        <AdaptiveImageGallery 
+          images={data.images}
+          descriptions={data.imageDescriptions || []}
+          title={data.title}
+        />
+      </div>
+    </div>
+  );
 }
 
 function latLonToPosition(
@@ -1069,10 +1481,100 @@ function LoadingScreen({ isVisible }: { isVisible: boolean }) {
 }
 
 export default function SpacePortfolio() {
+  React.useEffect(() => {
+    const styleId = 'custom-scrollbar-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        .projects-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(139, 92, 246, 0.6) rgba(139, 92, 246, 0.1);
+        }
+        .projects-scrollbar::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .projects-scrollbar::-webkit-scrollbar-track {
+          background: rgba(139, 92, 246, 0.1);
+          border-radius: 8px;
+          margin: 4px 0;
+        }
+        .projects-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, rgba(139, 92, 246, 0.8) 0%, rgba(168, 85, 247, 0.6) 100%);
+          border-radius: 8px;
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+        }
+        .projects-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, rgba(139, 92, 246, 1) 0%, rgba(168, 85, 247, 0.8) 100%);
+          border-color: rgba(139, 92, 246, 0.5);
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+        .projects-scrollbar::-webkit-scrollbar-thumb:active {
+          background: linear-gradient(180deg, rgba(99, 102, 241, 1) 0%, rgba(139, 92, 246, 0.9) 100%);
+        }
+        .projects-scrollbar::-webkit-scrollbar-corner {
+          background: rgba(139, 92, 246, 0.1);
+          border-radius: 8px;
+        }
+        @supports not selector(::-webkit-scrollbar) {
+          .projects-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139, 92, 246, 0.8) rgba(139, 92, 246, 0.15);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    return () => {
+      const existingStyle = document.getElementById(styleId);
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, []);
+
+function ProjectCard({ image, name, tech, description, links }: {
+  image: string,
+  name: string,
+  tech: string[],
+  description: string,
+  links: { href: string, icon: string, label: string }[]
+}) {
+  return (
+    <div className="bg-purple-700/25 border-2 border-pink-300/60 rounded-2xl p-0 hover:border-pink-300/80 hover:bg-purple-700/35 transition-all duration-300 group shadow-lg flex flex-col w-full md:bg-purple-800/20 md:border-2 md:border-purple-400/40 md:hover:border-pink-300/60 md:hover:bg-purple-700/25">
+      <div className="w-full aspect-[16/9] overflow-hidden rounded-t-2xl">
+        <img src={image} alt={name} className="w-full h-full object-cover rounded-t-2xl border-b-4 border-indigo-300/60 shadow-md" />
+      </div>
+      <div className="flex-1 flex flex-col justify-between h-full p-6">
+        <div>
+          <h3 className="text-2xl font-semibold text-pink-200 mb-1 group-hover:text-pink-100 transition-colors duration-300 md:text-purple-200 md:group-hover:text-pink-200">{name} <span className="text-purple-300/70 text-base font-normal ml-2"></span></h3>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {tech.map((t, i) => (
+              <span key={i} className="bg-indigo-400/20 text-indigo-200 px-2 py-1 rounded-lg text-xs font-medium tracking-wide">{t}</span>
+            ))}
+          </div>
+          <p className="leading-relaxed text-white/90 text-sm mb-3">{description}</p>
+        </div>
+        <div className="flex gap-3 mt-2">
+          {links.map((l, i) => (
+            <a key={i} href={l.href} target="_blank" rel="noopener noreferrer" title={l.label} className="text-indigo-200 hover:text-pink-300 transition-colors duration-300">
+              {l.icon === 'globe' ? <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/></svg>
+                : l.icon === 'github' ? <Github size={22} />
+                : null}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
   // Hobbies state
-  const hobbyTabs = ['music', 'theatre', 'photos', 'cities', 'gaming', 'skiing']
-  const [hobbyOrder, setHobbyOrder] = React.useState<string[]>([])
+  const hobbyTabs: HobbyKey[] = ['music', 'theatre', 'photos', 'cities', 'gaming', 'skiing']
+  const [hobbyOrder, setHobbyOrder] = React.useState<HobbyKey[]>([])
   const [hobbyIndex, setHobbyIndex] = React.useState(0)
+  const currentHobby = hobbyOrder.length > 0 ? hobbyOrder[hobbyIndex] : hobbyTabs[0]
 
   // Social links
   const socialLinks = [
@@ -1090,7 +1592,7 @@ function AboutMe() {
         {/* Image - shows on top for mobile, left side for desktop */}
         <div className="flex justify-center items-center w-full sm:w-1/2 xl:w-1/2 min-h-[160px] sm:min-h-[260px] order-1 sm:order-1 px-0 mt-2 sm:mt-0">
           <img
-            src="/images/about me2.jpg"
+            src="/images/about me.jpg"
             alt="Dominic Lemoine de Martigny"
             className="w-full h-auto rounded-2xl object-contain shadow-[0_6px_32px_0_rgba(126,139,245,0.18)] bg-transparent"
             style={{ maxHeight: '320px', maxWidth: '100%' }}
@@ -1260,60 +1762,70 @@ function AboutMe() {
   }
 
 
-  // Animate camera to a position, then open modal
-  function flyToLandmarkAndOpenModal(section: string) {
-    const pos = getLandmarkPosition(section)
-    if (!pos) {
-      setActiveModal(section)
-      setIsMobileMenuOpen(false)
-      return
-    }
-    // Camera offset: move back along the vector from origin to landmark
-    let offsetDistance = 3.2
-    const norm = Math.sqrt(pos[0]**2 + pos[1]**2 + pos[2]**2)
-    const offset = [
-      pos[0] / norm * offsetDistance,
-      pos[1] / norm * offsetDistance,
-      pos[2] / norm * offsetDistance,
-    ]
-    const endPos: [number, number, number] = [
-      pos[0] + offset[0],
-      pos[1] + offset[1],
-      pos[2] + offset[2],
-    ]
-    // Get the actual camera position from Three.js
-    let startPos: [number, number, number] = [0, 0, 0]
-    if (controlsRef.current && controlsRef.current.object) {
-      const cam = controlsRef.current.object
-      startPos = [cam.position.x, cam.position.y, cam.position.z]
+// Animate camera to a position, then open modal
+function flyToLandmarkAndOpenModal(section: string) {
+  const pos = getLandmarkPosition(section)
+  if (!pos) {
+    // Handle hobby sections that might not have direct landmarks
+    if (hobbyTabs.includes(section as HobbyKey)) {
+      setActiveModal('hobbies')
     } else {
-      startPos = endPos // fallback if camera not available
+      setActiveModal(section)
     }
-    const duration = 1.2
-    const fps = 60
-    const totalFrames = duration * fps
-    let frame = 0
-    function smoothstep(x: number): number { return x * x * (3 - 2 * x) }
-    function animate() {
-      frame++
-      const linearAlpha = Math.min(1, frame / totalFrames)
-      const alpha = smoothstep(linearAlpha)
-      const newPos: [number, number, number] = [
-        startPos[0] + (endPos[0] - startPos[0]) * alpha,
-        startPos[1] + (endPos[1] - startPos[1]) * alpha,
-        startPos[2] + (endPos[2] - startPos[2]) * alpha,
-      ]
-      setCameraPos(newPos)
-      if (linearAlpha < 1) {
-        requestAnimationFrame(animate)
-      } else {
-        setCameraPos(endPos)
-        setActiveModal(section)
-        setIsMobileMenuOpen(false)
-      }
-    }
-    animate()
+    setIsMobileMenuOpen(false)
+    return
   }
+  // Camera offset: move back along the vector from origin to landmark
+  let offsetDistance = 3.2
+  const norm = Math.sqrt(pos[0]**2 + pos[1]**2 + pos[2]**2)
+  const offset = [
+    pos[0] / norm * offsetDistance,
+    pos[1] / norm * offsetDistance,
+    pos[2] / norm * offsetDistance,
+  ]
+  const endPos: [number, number, number] = [
+    pos[0] + offset[0],
+    pos[1] + offset[1],
+    pos[2] + offset[2],
+  ]
+  // Get the actual camera position from Three.js
+  let startPos: [number, number, number] = [0, 0, 0]
+  if (controlsRef.current && controlsRef.current.object) {
+    const cam = controlsRef.current.object
+    startPos = [cam.position.x, cam.position.y, cam.position.z]
+  } else {
+    startPos = endPos // fallback if camera not available
+  }
+  const duration = 1.2
+  const fps = 60
+  const totalFrames = duration * fps
+  let frame = 0
+  function smoothstep(x: number): number { return x * x * (3 - 2 * x) }
+  function animate() {
+    frame++
+    const linearAlpha = Math.min(1, frame / totalFrames)
+    const alpha = smoothstep(linearAlpha)
+    const newPos: [number, number, number] = [
+      startPos[0] + (endPos[0] - startPos[0]) * alpha,
+      startPos[1] + (endPos[1] - startPos[1]) * alpha,
+      startPos[2] + (endPos[2] - startPos[2]) * alpha,
+    ]
+    setCameraPos(newPos)
+    if (linearAlpha < 1) {
+      requestAnimationFrame(animate)
+    } else {
+      setCameraPos(endPos)
+      // Set the correct modal based on section type
+      if (hobbyTabs.includes(section as HobbyKey)) {
+        setActiveModal('hobbies')
+      } else {
+        setActiveModal(section)
+      }
+      setIsMobileMenuOpen(false)
+    }
+  }
+  animate()
+}
 
   const openModal = (section: string) => {
     const doOpen = () => {
@@ -1329,12 +1841,19 @@ function AboutMe() {
           setHobbyOrder(shuffled)
           setHobbyIndex(0)
           flyToLandmarkAndOpenModal(shuffled[0])
+          return
         } else {
           const nextIndex = (hobbyIndex + 1) % hobbyOrder.length
           setHobbyIndex(nextIndex)
           flyToLandmarkAndOpenModal(hobbyOrder[nextIndex])
+          return
         }
-        setActiveModal('hobbies')
+      } else if (hobbyTabs.includes(section as HobbyKey)) {
+        // Always reset hobbyOrder to default order and set correct index, and fly to landmark
+        setHobbyOrder([...hobbyTabs])
+        const idx = hobbyTabs.indexOf(section as HobbyKey)
+        setHobbyIndex(idx)
+        flyToLandmarkAndOpenModal(section)
         setIsMobileMenuOpen(false)
       } else {
         setActiveModal(section)
@@ -1662,8 +2181,10 @@ function AboutMe() {
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
           <div 
-            className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 md:p-8 max-w-4xl max-h-[80vh] w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
-          > 
+            className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 ${
+              activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-7xl max-h-[90vh]' : 'md:p-8 max-w-4xl max-h-[80vh]'
+            } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
+          >
             <button
               onClick={closeModal}
               className="absolute top-2 right-2 sm:top-4 sm:right-4 text-indigo-200 hover:text-indigo-100 transition-all duration-300 hover:rotate-90 z-10 cursor-pointer"
@@ -1671,81 +2192,103 @@ function AboutMe() {
               <X size={24} />
             </button>
 
-            <div className={`transition-all duration-700 delay-100 ${showModal ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+            <div className={`transition-all duration-700 delay-100 ${showModal ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}> 
               {activeModal === "about" && (
                 <AboutMe />
               )}
 
+              {activeModal === "hobbies" && (
+                <HobbiesModal hobby={currentHobby} />
+              )}
 
-        {activeModal === "experience" && (
-          <div className="px-4 sm:px-8 md:px-12 lg:px-20 max-w-6xl sm:pt-2 w-full h-full overflow-y-auto">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4 sm:mb-6 md:mb-8 text-center sm:text-left">
-              Experience
-            </h2>
-            <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 items-stretch">
-              <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 hover:border-pink-300/60 transition-all duration-300 group">
-                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Engineer Intern</h3>
-                <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">ALS Geoanalytics • May 2025 - Aug 2025</p>
-                <p className="leading-relaxed text-white/90 text-sm sm:text-base">
-                  Built a full-stack geoanalytics platform with AI-driven data processing, cloud-native architecture, and real-time dashboards, streamlining geoscience document analysis and cutting data labeling time from minutes to seconds.
-                </p>
-              </div>
-              <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 mb-6 hover:border-pink-300/60 transition-all duration-300 group">
-                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Developer</h3>
-                <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">GCE Global • Jun 2024 - Aug 2024</p>
-                <p className="leading-relaxed text-white/90 text-sm sm:text-base">
-                  Modernized a legacy website and built AI-powered tools to streamline legal research and document analysis.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-              {activeModal === "projects" && (
-                <div>
-                  <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 mb-6">
-                    Projects
+              {activeModal === "experience" && (
+                <div className="px-4 sm:px-8 md:px-12 lg:px-20 max-w-6xl sm:pt-2 w-full h-full overflow-y-auto">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl pt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4 sm:mb-6 md:mb-8 text-center sm:text-left">
+                    Experience
                   </h2>
-                  <div className="text-purple-100 space-y-6">
-                    <div className="bg-purple-800/20 rounded-lg p-6 border border-purple-400/15 hover:border-pink-300/30 hover:bg-purple-700/25 transition-all duration-300 group cursor-pointer">
-                      <h3 className="text-2xl font-semibold text-purple-200 mb-3 group-hover:text-pink-200 transition-colors duration-300">Lorem Dashboard</h3>
-                      <p className="leading-relaxed">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                    </div>
-                    <div className="bg-purple-800/20 rounded-lg p-6 border border-purple-400/15 hover:border-pink-300/30 hover:bg-purple-700/25 transition-all duration-300 group cursor-pointer">
-                      <h3 className="text-2xl font-semibold text-purple-200 mb-3 group-hover:text-pink-200 transition-colors duration-300">Ipsum Chat App</h3>
-                      <p className="leading-relaxed">
-                        Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+                  <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 items-stretch">
+                    <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 hover:border-pink-300/60 transition-all duration-300 group">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Engineer Intern</h3>
+                      <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">ALS Geoanalytics • May 2025 - Aug 2025</p>
+                      <p className="leading-relaxed text-white/90 text-sm sm:text-base">
+                        Built a full-stack geoanalytics platform with AI-driven data processing, cloud-native architecture, and real-time dashboards, streamlining geoscience document analysis and cutting data labeling time from minutes to seconds.
                       </p>
                     </div>
-                    <div className="bg-purple-800/20 rounded-lg p-6 border border-purple-400/15 hover:border-pink-300/30 hover:bg-purple-700/25 transition-all duration-300 group cursor-pointer">
-                      <h3 className="text-2xl font-semibold text-purple-200 mb-3 group-hover:text-pink-200 transition-colors duration-300">Dolor Commerce</h3>
-                      <p className="leading-relaxed">Etiam euismod, urna eu tincidunt consectetur, nisi nisl aliquam enim.</p>
+                    <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 mb-6 hover:border-pink-300/60 transition-all duration-300 group">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Developer</h3>
+                      <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">GCE Global • Jun 2024 - Aug 2024</p>
+                      <p className="leading-relaxed text-white/90 text-sm sm:text-base">
+                        Modernized a legacy website and built AI-powered tools to streamline legal research and document analysis.
+                      </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {activeModal === "hobbies" && (
-                <div>
-                  <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 mb-6">
-                    Hobbies & Interests
+              {activeModal === "projects" && (
+                <div className="px-4 sm:px-6 md:px-8 max-w-7xl w-full h-full flex flex-col">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 pb-4 sm:pb-6 md:pb-6 text-center md:pt-0 pt-4">
+                    Projects
                   </h2>
-                  <div className="text-purple-100 space-y-5">
-                    <div className="flex items-center space-x-4 group cursor-pointer hover:text-pink-100 transition-colors duration-300">
-                      <div className="w-3 h-3 bg-purple-300 rounded-full group-hover:bg-pink-300 transition-colors duration-300 shadow-sm"></div>
-                      <span className="text-lg leading-relaxed">Lorem ipsum dolor sit amet</span>
-                    </div>
-                    <div className="flex items-center space-x-4 group cursor-pointer hover:text-pink-100 transition-colors duration-300">
-                      <div className="w-3 h-3 bg-indigo-300 rounded-full group-hover:bg-pink-300 transition-colors duration-300 shadow-sm"></div>
-                      <span className="text-lg leading-relaxed">Consectetur adipiscing elit</span>
-                    </div>
-                    <div className="flex items-center space-x-4 group cursor-pointer hover:text-pink-100 transition-colors duration-300">
-                      <div className="w-3 h-3 bg-pink-300 rounded-full group-hover:bg-purple-300 transition-colors duration-300 shadow-sm"></div>
-                      <span className="text-lg leading-relaxed">Etiam euismod urna eu tincidunt</span>
-                    </div>
-                    <div className="flex items-center space-x-4 group cursor-pointer hover:text-pink-100 transition-colors duration-300">
-                      <div className="w-3 h-3 bg-blue-300 rounded-full group-hover:bg-pink-300 transition-colors duration-300 shadow-sm"></div>
-                      <span className="text-lg leading-relaxed">Pellentesque habitant morbi tristique senectus</span>
+                  <div className="flex-1 overflow-y-scroll max-h-[calc(90vh-160px)] pr-1 projects-scrollbar">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 pb-4">
+                      <ProjectCard
+                        image="/images/preview.png"
+                        name="uwGuessr"
+                        tech={["Typescript", "Next.js", "GraphQL", "Supabase", "AWS", "Mapbox", "Auth0"]}
+                        description="Waterloo's very own Geoguessr! uwGuessr is a geoguessing game with over 60,000 visits and 5,000 users. The platform features a real-time daily leaderboard, user-submitted image challenges, and robust security to ensure fair play."
+                        links={[
+                          { href: "https://github.com/DominicLDM/uwGuessr", icon: "github", label: "GitHub" }, 
+                          { href: "https://uwguessr.com", icon: "globe", label: "Website" }
+                        ]}
+                      />
+                      <ProjectCard
+                        image="/images/globefolio.png"
+                        name="Globefolio"
+                        tech={["React + Vite", "Three.js", "Typescript", "Tailwind"]}
+                        description="My personal globefolio!"
+                        links={[
+                          { href: "https://github.com/DominicLDM/portfolio", icon: "github", label: "GitHub" }, 
+                          { href: "https://dominic.earth", icon: "globe", label: "Website" }
+                        ]}
+                      />
+                      <ProjectCard
+                        image="/images/glasses.jpg"
+                        name="GLASSES"
+                        tech={["Python", "JFlask", "React Native ", "Javascript", "Raspberry Pi"]}
+                        description="The Graphical Light Assisted Sound Sensor Eyewear System (GLASSES) is a wearable pair of glasses with built in song recognition and lyric display. Made in collaboration with Nathan L, Nur I, Peizhe G, Kiersten E, and Jennifer Y!"
+                        links={[
+                          { href: "https://github.com/DominicLDM/GLASSES", icon: "github", label: "GitHub" }, 
+                        ]}
+                      />
+                      <ProjectCard
+                        image="/images/RemberU.png"
+                        name="RememberU"
+                        tech={["Flutter", "Firebase", "Python", "Flask", "OpenCV", "Gemini", "Raspberry Pi"]}
+                        description="RememberU is a wearable AI device designed to help users recall conversations at busy networking events. By combining lip-reading, facial recognition, and Gemini AI, it delivers real-time, context-aware summaries directly to your mobile app. "
+                        links={[
+                          { href: "https://github.com/Rosnaky/RemberU-Pi", icon: "github", label: "GitHub" }, 
+                          { href: "https://devpost.com/software/orientu", icon: "globe", label: "Website" }
+                        ]}
+                      />
+                      <ProjectCard
+                        image="/images/V3-Project.png"
+                        name="V3"
+                        tech={["Python", "Matplotlib", "Tkinter"]}
+                        description="Tanner Slutsken and I developed V³, a physics simulator designed to help students learn physics fundamentals. The project won first place in Engineering & Computer Science and placed fourth overall at our school's science fair!"
+                        links={[
+                          { href: "https://github.com/DominicLDM/science-fair-2023", icon: "github", label: "GitHub" }, 
+                        ]}
+                      />
+                      <ProjectCard
+                        image="/images/Worldle-Project.png"
+                        name="Worldle"
+                        tech={["Python", "Matplotlib", "Tkinter"]}
+                        description="My version of Worldle, a geography-themed wordle game by Teuteuf. Made for my Secondary 4 computer science class (and to practice my own geography knowledge)."
+                        links={[
+                          { href: "https://github.com/DominicLDM/worldle-pygame", icon: "github", label: "GitHub" }, 
+                        ]}
+                      />
                     </div>
                   </div>
                 </div>
