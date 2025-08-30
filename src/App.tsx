@@ -236,7 +236,7 @@ function MobileImageGallery({
         {/* Maximized image container */}
         <div 
           ref={containerRef}
-          className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75svh-60px)] 
+          className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75svh-80px)] 
                      flex items-center justify-center px-6"
         >
           {/* Main image with optimized sizing */}
@@ -652,7 +652,7 @@ return (
     <div className="space-y-6 flex-1 flex flex-col min-h-0">
       {/* Enhanced title section */}
       <div className="text-center flex-shrink-0 mb-4">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 md:mb-4 mb-2">
           {data.title}
         </h2>
         <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
