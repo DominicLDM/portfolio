@@ -157,48 +157,35 @@ function MobileImageGallery({
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<boolean[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Preload all images and track their loading status
+  // Use the simple preloader hook (same as desktop)
+  const { preloadImages } = useImagePreloader(images);
+
+  // Silently preload all images when component mounts (same as desktop)
   useEffect(() => {
-    if (images.length === 0) return;
+    preloadImages();
+  }, [preloadImages]);
+
+  // Preload adjacent images for smoother navigation (same as desktop)
+  useEffect(() => {
+    if (images.length <= 1) return;
     
-    const newLoadedImages = new Array(images.length).fill(false);
-    setLoadedImages(newLoadedImages);
+    const nextIndex = (currentIndex + 1) % images.length;
+    const prevIndex = (currentIndex - 1 + images.length) % images.length;
     
-    const loadPromises = images.map((url, index) => {
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          newLoadedImages[index] = true;
-          setLoadedImages([...newLoadedImages]);
-          resolve();
-        };
-        img.onerror = () => {
-          // Even if an image fails, mark it as "loaded" to avoid infinite loading
-          newLoadedImages[index] = true;
-          setLoadedImages([...newLoadedImages]);
-          resolve();
-        };
-        img.src = url;
-      });
+    [nextIndex, prevIndex].forEach(index => {
+      const img = new Image();
+      img.src = images[index];
     });
-
-    // Optional: You could use Promise.all(loadPromises) here if you want
-    // to know when all images are loaded
-  }, [images]);
-
-  // Reset when index changes
-  useEffect(() => {
-    setIsTransitioning(false);
-  }, [currentIndex]);
+  }, [currentIndex, images]);
 
   const nextImage = () => {
     if (isTransitioning || images.length <= 1) return;
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
+      setTimeout(() => setIsTransitioning(false), 50);
     }, 200);
   };
 
@@ -207,11 +194,9 @@ function MobileImageGallery({
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+      setTimeout(() => setIsTransitioning(false), 50);
     }, 200);
   };
-
-  // Check if current image is loaded
-  const isCurrentImageLoaded = loadedImages.length > 0 && loadedImages[currentIndex];
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
@@ -254,14 +239,6 @@ function MobileImageGallery({
           className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75svh-60px)] 
                      flex items-center justify-center px-6"
         >
-          {/* Loading placeholder */}
-          {!isCurrentImageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="w-6 h-6 border-2 border-purple-400/60 border-t-transparent 
-                             rounded-full animate-spin"></div>
-            </div>
-          )}
-
           {/* Main image with optimized sizing */}
           <div className="relative w-full h-full rounded-xl overflow-hidden 
                          bg-gradient-to-br from-purple-900/15 to-indigo-900/15 
@@ -272,9 +249,7 @@ function MobileImageGallery({
               className={`w-full h-full object-contain transition-all duration-300 ${
                 isTransitioning 
                   ? "opacity-0 scale-105" 
-                  : isCurrentImageLoaded 
-                    ? "opacity-100 scale-100" 
-                    : "opacity-0"
+                  : "opacity-100 scale-100"
               }`}
             />
 
