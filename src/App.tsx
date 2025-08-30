@@ -147,12 +147,32 @@ function AdaptiveImageGallery({
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get container dimensions and update on resize
+  // Get container dimensions
   useEffect(() => {
     const updateContainerSize = () => {
       if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setContainerSize({ width, height });
+        // Get the modal container
+        const modal = containerRef.current.closest('[class*="max-w"]');
+        let availableWidth = window.innerWidth * 0.9;
+        let availableHeight = window.innerHeight * 0.9;
+        
+        if (modal) {
+          const rect = modal.getBoundingClientRect();
+          availableWidth = rect.width;
+          availableHeight = rect.height;
+        }
+        
+        // Reserve space for description and buttons
+        const descriptionSpace = window.innerWidth < 768 ? 60 : 50;
+        const buttonSpace = window.innerWidth < 768 ? 70 : 80;
+        
+        // FIXED: Account for navigation arrows taking up space
+        const arrowSpace = window.innerWidth < 600 ? 100 : 120; // Space for left + right arrows + gaps
+        
+        setContainerSize({
+          width: availableWidth - buttonSpace - arrowSpace, // Subtract arrow space
+          height: availableHeight - descriptionSpace
+        });
       }
     };
 
@@ -189,10 +209,13 @@ function AdaptiveImageGallery({
     }, 200);
   };
 
-  // Calculate image size that fits in container while preserving aspect ratio
+  // Calculate image size that fits in available space while preserving aspect ratio
   const imageSize = useMemo(() => {
     if (!imageDimensions || containerSize.width === 0 || containerSize.height === 0) {
-      return { width: 'auto', height: 'auto' };
+      // FIXED: Much smaller fallback for mobile devices
+      const fallbackWidth = window.innerWidth < 600 ? Math.min(250, window.innerWidth - 120) : 400;
+      const fallbackHeight = window.innerWidth < 600 ? Math.min(188, window.innerHeight * 0.4) : 300;
+      return { width: fallbackWidth, height: fallbackHeight };
     }
     
     const { width: imgWidth, height: imgHeight } = imageDimensions;
@@ -200,52 +223,62 @@ function AdaptiveImageGallery({
     
     // Calculate maximum dimensions based on container size
     const maxWidth = containerSize.width;
-    const maxHeight = containerSize.height - 60; // Reserve space for description
+    const maxHeight = containerSize.height;
+    
+    // FIXED: Add minimum constraints for very small screens
+    const minWidth = window.innerWidth < 600 ? 200 : 300;
+    const minHeight = window.innerWidth < 600 ? 150 : 200;
     
     // Calculate size that fits while preserving aspect ratio
-    let finalWidth = maxWidth;
+    let finalWidth = Math.max(minWidth, Math.min(maxWidth, imgWidth));
     let finalHeight = finalWidth / aspectRatio;
     
     if (finalHeight > maxHeight) {
-      finalHeight = maxHeight;
+      finalHeight = Math.max(minHeight, maxHeight);
       finalWidth = finalHeight * aspectRatio;
     }
     
+    // FIXED: Ensure we don't exceed screen bounds even with minimums
+    if (finalWidth > maxWidth) {
+      finalWidth = maxWidth;
+      finalHeight = finalWidth / aspectRatio;
+    }
+    
     return {
-      width: finalWidth,
-      height: finalHeight
+      width: Math.floor(finalWidth),
+      height: Math.floor(finalHeight)
     };
   }, [imageDimensions, containerSize]);
 
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full max-h-[calc(90vh-160px)] flex flex-col items-center justify-center"
-      style={{ maxWidth: '90vw' }}
+      className="relative w-full h-full flex flex-col items-center justify-center"
     >
       {/* Navigation and image container */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-2 md:gap-4 w-full h-full">
         {/* Left Arrow */}
         <button
           onClick={prevImage}
           disabled={isTransitioning || images.length <= 1}
-          className={`p-3 bg-black/40 hover:bg-black/60 border border-white/20 hover:border-purple-300/50 rounded-full text-white/80 hover:text-purple-200 transition-all duration-300 backdrop-blur-sm ${
+          className={`flex-shrink-0 p-2 md:p-2 bg-black/40 hover:bg-black/60 border border-white/20 hover:border-purple-300/50 rounded-full text-white/80 hover:text-purple-200 transition-all duration-300 backdrop-blur-sm z-10 ${
             isTransitioning || images.length <= 1 
               ? 'opacity-50 cursor-not-allowed' 
               : 'hover:scale-110 cursor-pointer'
           }`}
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={20} className="md:w-5 md:h-5" />
         </button>
 
-        {/* Image container - size matches the image exactly */}
+        {/* Image container - FIXED: Better responsive styling */}
         <div 
-          className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-400/30 transition-all duration-500 flex items-center justify-center"
+          className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-400/30 transition-all duration-500 flex items-center justify-center flex-shrink-0"
           style={{
             width: `${imageSize.width}px`,
             height: `${imageSize.height}px`,
-            minWidth: '200px',
-            minHeight: '150px'
+            // FIXED: Remove conflicting max constraints that could cause overflow
+            minWidth: window.innerWidth < 600 ? '200px' : '300px',
+            minHeight: window.innerWidth < 600 ? '150px' : '200px'
           }}
         >
           <img
@@ -260,7 +293,7 @@ function AdaptiveImageGallery({
 
           {/* Image counter */}
           {images.length > 1 && (
-            <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 text-white/90 text-sm font-medium">
+            <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm border border-white/20 rounded-full px-2 py-1 text-white/90 text-xs md:text-sm font-medium">
               {currentIndex + 1} / {images.length}
             </div>
           )}
@@ -270,19 +303,19 @@ function AdaptiveImageGallery({
         <button
           onClick={nextImage}
           disabled={isTransitioning || images.length <= 1}
-          className={`p-3 bg-black/40 hover:bg-black/60 border border-white/20 hover:border-purple-300/50 rounded-full text-white/80 hover:text-purple-200 transition-all duration-300 backdrop-blur-sm ${
+          className={`flex-shrink-0 p-2 md:p-2 bg-black/40 hover:bg-black/60 border border-white/20 hover:border-purple-300/50 rounded-full text-white/80 hover:text-purple-200 transition-all duration-300 backdrop-blur-sm z-10 ${
             isTransitioning || images.length <= 1 
               ? 'opacity-50 cursor-not-allowed' 
               : 'hover:scale-110 cursor-pointer'
           }`}
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={20} className="md:w-5 md:h-5" />
         </button>
       </div>
 
       {/* Image description */}
-      <div className="mt-4 text-center px-2">
-        <p className="text-purple-200/90 text-base leading-relaxed max-w-4xl mx-auto">
+      <div className="mt-4 mb-4 md:mb-0 text-center px-2 w-full flex-shrink-0">
+        <p className="text-purple-200/90 text-sm md:text-base leading-relaxed max-w-full mx-auto break-words">
           {descriptions[currentIndex] || `${title} image ${currentIndex + 1}`}
         </p>
       </div>
@@ -407,20 +440,21 @@ function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
   }
 
   // Enhanced template for other hobbies
-  return (
-    <div className="px-4 sm:px-6 md:px-8 lg:px-12 max-w-6xl w-full h-full overflow-y-auto">
-      <div className="space-y-6">
-        {/* Enhanced title section */}
-        <div className="text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
-            {data.title}
-          </h2>
-          <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
-            {data.description}
-          </p>
-        </div>
+return (
+  <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full h-full overflow-y-auto flex flex-col">
+    <div className="space-y-6 flex-1 flex flex-col min-h-0">
+      {/* Enhanced title section */}
+      <div className="text-center flex-shrink-0">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
+          {data.title}
+        </h2>
+        <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
+          {data.description}
+        </p>
+      </div>
 
-        {/* Image Gallery */}
+      {/* Image Gallery - This will now expand to fill available space */}
+      <div className="flex-1 flex items-center justify-center min-h-0">
         <AdaptiveImageGallery 
           images={data.images}
           descriptions={data.imageDescriptions || []}
@@ -428,7 +462,8 @@ function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
         />
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 function latLonToPosition(
@@ -2180,11 +2215,17 @@ function flyToLandmarkAndOpenModal(section: string) {
           style={{ backgroundColor: 'rgba(120, 110, 255, 0.08)', backdropFilter: 'blur(12px)' }}
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
-          <div 
-            className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 ${
-              activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-7xl max-h-[90vh]' : 'md:p-8 max-w-4xl max-h-[80vh]'
-            } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
-          >
+<div 
+  className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 ${
+    activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-[95vw]' : 'md:p-8 max-w-4xl'
+  } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
+  style={{ 
+    maxHeight: '95vh',
+    height: 'auto',
+    display: 'flex',
+    flexDirection: 'column'
+  }}
+>
             <button
               onClick={closeModal}
               className="absolute top-2 right-2 sm:top-4 sm:right-4 text-indigo-200 hover:text-indigo-100 transition-all duration-300 hover:rotate-90 z-10 cursor-pointer"
@@ -2197,9 +2238,12 @@ function flyToLandmarkAndOpenModal(section: string) {
                 <AboutMe />
               )}
 
+            <div className="flex-1 overflow-y-auto">
               {activeModal === "hobbies" && (
                 <HobbiesModal hobby={currentHobby} />
               )}
+              {/* Other modal content */}
+            </div>
 
               {activeModal === "experience" && (
                 <div className="px-4 sm:px-8 md:px-12 lg:px-20 max-w-6xl sm:pt-2 w-full h-full overflow-y-auto">
