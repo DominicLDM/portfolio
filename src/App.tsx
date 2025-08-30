@@ -146,7 +146,163 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   }
 }
 
-function AdaptiveImageGallery({ 
+// Mobile Image Gallery Component - Refactored for better UX
+function MobileImageGallery({ 
+  images, 
+  descriptions, 
+  title 
+}: {
+  images: string[];
+  descriptions: string[];
+  title: string;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use the simple preloader hook
+  const { preloadImages } = useImagePreloader(images);
+
+  // Silently preload all images when component mounts
+  useEffect(() => {
+    preloadImages();
+  }, [preloadImages]);
+
+  // Preload adjacent images for smoother navigation
+  useEffect(() => {
+    if (images.length <= 1) return;
+    
+    const nextIndex = (currentIndex + 1) % images.length;
+    const prevIndex = (currentIndex - 1 + images.length) % images.length;
+    
+    [nextIndex, prevIndex].forEach(index => {
+      const img = new Image();
+      img.src = images[index];
+    });
+  }, [currentIndex, images]);
+
+  // Reset image loaded state when index changes
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [currentIndex]);
+
+  const nextImage = () => {
+    if (isTransitioning || images.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 200);
+  };
+
+  const prevImage = () => {
+    if (isTransitioning || images.length <= 1) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 200);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  return (
+    <div className="relative w-full h-full flex flex-col overflow-hidden">
+      {/* Main image area with overlay navigation */}
+      <div className="relative flex-1 flex items-center justify-center min-h-0">
+        {/* Fixed position navigation buttons - minimal padding, positioned outside image bounds */}
+        {/* Circular navigation buttons - positioned at very edge */}
+        <button
+          onClick={prevImage}
+          disabled={isTransitioning || images.length <= 1}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 
+                     p-2 bg-black/60 hover:bg-black/80 
+                     border border-white/20 hover:border-purple-300/50 
+                     rounded-full text-white/80 hover:text-purple-200 
+                     transition-all duration-200 backdrop-blur-sm
+                     disabled:opacity-30 disabled:cursor-not-allowed
+                     hover:scale-105 disabled:hover:scale-100
+                     shadow-md"
+        >
+          <ChevronLeft size={16} strokeWidth={2.5} />
+        </button>
+
+        <button
+          onClick={nextImage}
+          disabled={isTransitioning || images.length <= 1}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 
+                     p-2 bg-black/60 hover:bg-black/80 
+                     border border-white/20 hover:border-purple-300/50 
+                     rounded-full text-white/80 hover:text-purple-200 
+                     transition-all duration-200 backdrop-blur-sm
+                     disabled:opacity-30 disabled:cursor-not-allowed
+                     hover:scale-105 disabled:hover:scale-100
+                     shadow-md"
+        >
+          <ChevronRight size={16} strokeWidth={2.5} />
+        </button>
+
+        {/* Maximized image container */}
+        <div 
+          ref={containerRef}
+          className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75vh-60px)] 
+                     flex items-center justify-center px-6"
+        >
+            {/* Loading placeholder - positioned inside the same container */}
+            {!imageLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="w-6 h-6 border-2 border-purple-400/60 border-t-transparent 
+                               rounded-full animate-spin"></div>
+              </div>
+            )}
+
+          {/* Main image with optimized sizing */}
+          <div className="relative w-full h-full rounded-xl overflow-hidden 
+                         bg-gradient-to-br from-purple-900/15 to-indigo-900/15 
+                         border border-purple-400/25">
+            <img
+              src={images[currentIndex]}
+              alt={`${title} - ${descriptions[currentIndex] || "Image"}`}
+              onLoad={handleImageLoad}
+              className={`w-full h-full object-contain transition-all duration-300 ${
+                isTransitioning 
+                  ? "opacity-0 scale-105" 
+                  : imageLoaded 
+                    ? "opacity-100 scale-100" 
+                    : "opacity-0"
+              }`}
+            />
+
+            {/* Image counter - compact design */}
+            {images.length > 1 && (
+              <div className="absolute top-2 right-2 
+                             bg-black/70 backdrop-blur-sm 
+                             border border-white/15 rounded-lg 
+                             px-2 py-1 text-white/90 text-xs font-medium
+                             shadow-sm">
+                {currentIndex + 1}/{images.length}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Compact description section */}
+      <div className="flex-shrink-0 flex items-start justify-center px-4 pt-3 pb-3">
+        <p className="text-purple-200/90 text-sm leading-snug 
+                      text-center max-w-full break-words line-clamp-2">
+          {descriptions[currentIndex] || `${title} image ${currentIndex + 1}`}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Desktop Image Gallery Component
+function DesktopImageGallery({ 
   images, 
   descriptions, 
   title 
@@ -359,6 +515,44 @@ function AdaptiveImageGallery({
   );
 }
 
+// Main AdaptiveImageGallery component
+function AdaptiveImageGallery({ 
+  images, 
+  descriptions, 
+  title 
+}: {
+  images: string[];
+  descriptions: string[];
+  title: string;
+}) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check both user agent and screen size
+    const checkIfMobile = () => {
+      const ua = window.navigator.userAgent;
+      const isMobileUA = /Mobi|Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
+      const isSmallScreen = window.innerWidth < 768; // Common breakpoint for mobile
+      
+      setIsMobile(isMobileUA || isSmallScreen);
+    };
+
+    // Check initially
+    checkIfMobile();
+    
+    // Add resize listener for responsive changes
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  if (isMobile) {
+    return <MobileImageGallery images={images} descriptions={descriptions} title={title} />;
+  } else {
+    return <DesktopImageGallery images={images} descriptions={descriptions} title={title} />;
+  }
+}
+
 // Spotify Integration Component
 function SpotifySection({ spotifyData }: { spotifyData: any }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -480,7 +674,7 @@ return (
   <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full h-full overflow-y-auto flex flex-col">
     <div className="space-y-6 flex-1 flex flex-col min-h-0">
       {/* Enhanced title section */}
-      <div className="text-center flex-shrink-0">
+      <div className="text-center flex-shrink-0 mb-4">
         <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
           {data.title}
         </h2>
