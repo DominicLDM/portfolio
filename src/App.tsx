@@ -20,6 +20,20 @@ declare global {
   }
 }
 
+const useImagePreloader = (imageUrls: string[]) => {
+  const preloadImages = useCallback(() => {
+    if (imageUrls.length === 0) return;
+    
+    // Silently preload all images
+    imageUrls.forEach((url) => {
+      const img = new Image();
+      img.src = url; // Just set the src, no callbacks needed
+    });
+  }, [imageUrls]);
+
+  return { preloadImages };
+};
+
 // Hobby data types
 type HobbyKey = 'music' | 'theatre' | 'photos' | 'cities' | 'gaming' | 'skiing';
 type HobbyInfo = {
@@ -146,6 +160,28 @@ function AdaptiveImageGallery({
   const [imageDimensions, setImageDimensions] = useState<{width: number, height: number} | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use the simple preloader hook
+  const { preloadImages } = useImagePreloader(images);
+
+  // Silently preload all images when component mounts
+  useEffect(() => {
+    preloadImages();
+  }, [preloadImages]);
+
+  // Preload adjacent images for even smoother navigation
+  useEffect(() => {
+    if (images.length <= 1) return;
+    
+    // Silently preload next and previous images
+    const nextIndex = (currentIndex + 1) % images.length;
+    const prevIndex = (currentIndex - 1 + images.length) % images.length;
+    
+    [nextIndex, prevIndex].forEach(index => {
+      const img = new Image();
+      img.src = images[index];
+    });
+  }, [currentIndex, images]);
 
   // Get container dimensions
   useEffect(() => {
@@ -2215,17 +2251,17 @@ function flyToLandmarkAndOpenModal(section: string) {
           style={{ backgroundColor: 'rgba(120, 110, 255, 0.08)', backdropFilter: 'blur(12px)' }}
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
-<div 
-  className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 ${
-    activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-[95vw]' : 'md:p-8 max-w-4xl'
-  } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
-  style={{ 
-    maxHeight: '95vh',
-    height: 'auto',
-    display: 'flex',
-    flexDirection: 'column'
-  }}
->
+        <div 
+          className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 ${
+            activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-[95vw] md:max-w-[85vw]' : 'md:p-8 max-w-4xl'
+          } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
+          style={{ 
+            maxHeight: '95vh',
+            height: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
             <button
               onClick={closeModal}
               className="absolute top-2 right-2 sm:top-4 sm:right-4 text-indigo-200 hover:text-indigo-100 transition-all duration-300 hover:rotate-90 z-10 cursor-pointer"
