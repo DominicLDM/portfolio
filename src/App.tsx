@@ -146,7 +146,6 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   }
 }
 
-// Mobile Image Gallery Component - Refactored for better UX
 function MobileImageGallery({ 
   images, 
   descriptions, 
@@ -158,33 +157,41 @@ function MobileImageGallery({
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<boolean[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use the simple preloader hook
-  const { preloadImages } = useImagePreloader(images);
-
-  // Silently preload all images when component mounts
+  // Preload all images and track their loading status
   useEffect(() => {
-    preloadImages();
-  }, [preloadImages]);
-
-  // Preload adjacent images for smoother navigation
-  useEffect(() => {
-    if (images.length <= 1) return;
+    if (images.length === 0) return;
     
-    const nextIndex = (currentIndex + 1) % images.length;
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
+    const newLoadedImages = new Array(images.length).fill(false);
+    setLoadedImages(newLoadedImages);
     
-    [nextIndex, prevIndex].forEach(index => {
-      const img = new Image();
-      img.src = images[index];
+    const loadPromises = images.map((url, index) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          newLoadedImages[index] = true;
+          setLoadedImages([...newLoadedImages]);
+          resolve();
+        };
+        img.onerror = () => {
+          // Even if an image fails, mark it as "loaded" to avoid infinite loading
+          newLoadedImages[index] = true;
+          setLoadedImages([...newLoadedImages]);
+          resolve();
+        };
+        img.src = url;
+      });
     });
-  }, [currentIndex, images]);
 
-  // Reset image loaded state when index changes
+    // Optional: You could use Promise.all(loadPromises) here if you want
+    // to know when all images are loaded
+  }, [images]);
+
+  // Reset when index changes
   useEffect(() => {
-    setImageLoaded(false);
+    setIsTransitioning(false);
   }, [currentIndex]);
 
   const nextImage = () => {
@@ -192,7 +199,6 @@ function MobileImageGallery({
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
-      setTimeout(() => setIsTransitioning(false), 50);
     }, 200);
   };
 
@@ -201,20 +207,17 @@ function MobileImageGallery({
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-      setTimeout(() => setIsTransitioning(false), 50);
     }, 200);
   };
 
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
+  // Check if current image is loaded
+  const isCurrentImageLoaded = loadedImages.length > 0 && loadedImages[currentIndex];
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
       {/* Main image area with overlay navigation */}
       <div className="relative flex-1 flex items-center justify-center min-h-0">
-        {/* Fixed position navigation buttons - minimal padding, positioned outside image bounds */}
-        {/* Circular navigation buttons - positioned at very edge */}
+        {/* Navigation buttons */}
         <button
           onClick={prevImage}
           disabled={isTransitioning || images.length <= 1}
@@ -248,16 +251,16 @@ function MobileImageGallery({
         {/* Maximized image container */}
         <div 
           ref={containerRef}
-          className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75vh-60px)] 
+          className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75svh-60px)] 
                      flex items-center justify-center px-6"
         >
-            {/* Loading placeholder - positioned inside the same container */}
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="w-6 h-6 border-2 border-purple-400/60 border-t-transparent 
-                               rounded-full animate-spin"></div>
-              </div>
-            )}
+          {/* Loading placeholder */}
+          {!isCurrentImageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="w-6 h-6 border-2 border-purple-400/60 border-t-transparent 
+                             rounded-full animate-spin"></div>
+            </div>
+          )}
 
           {/* Main image with optimized sizing */}
           <div className="relative w-full h-full rounded-xl overflow-hidden 
@@ -266,17 +269,16 @@ function MobileImageGallery({
             <img
               src={images[currentIndex]}
               alt={`${title} - ${descriptions[currentIndex] || "Image"}`}
-              onLoad={handleImageLoad}
               className={`w-full h-full object-contain transition-all duration-300 ${
                 isTransitioning 
                   ? "opacity-0 scale-105" 
-                  : imageLoaded 
+                  : isCurrentImageLoaded 
                     ? "opacity-100 scale-100" 
                     : "opacity-0"
               }`}
             />
 
-            {/* Image counter - compact design */}
+            {/* Image counter */}
             {images.length > 1 && (
               <div className="absolute top-2 right-2 
                              bg-black/70 backdrop-blur-sm 
@@ -291,7 +293,7 @@ function MobileImageGallery({
       </div>
 
       {/* Compact description section */}
-      <div className="flex-shrink-0 flex items-start justify-center px-4 pt-3 pb-3">
+      <div className="flex-shrink-0 flex items-start justify-center px-2 pt-3 pb-3">
         <p className="text-purple-200/90 text-sm leading-snug 
                       text-center max-w-full break-words line-clamp-2">
           {descriptions[currentIndex] || `${title} image ${currentIndex + 1}`}
