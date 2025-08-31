@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
-import { Github, ChevronLeft, ChevronRight, ExternalLink, Play, Pause, Music } from 'lucide-react'
+import { Github, ChevronLeft, ChevronRight, Music } from 'lucide-react'
 import { EffectComposer, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
@@ -40,52 +40,15 @@ type HobbyInfo = {
   title: string;
   images: string[];
   description: string;
-  special?: boolean;
   imageDescriptions?: string[];
-  spotifyData?: {
-    profileUrl: string;
-    recentTracks: {
-      name: string;
-      artist: string;
-      album: string;
-      embedId: string;
-    }[];
-    stats: {
-      topGenre: string;
-      hoursListened: number;
-      topArtist: string;
-    };
-  };
 };
+
 const hobbyData: Record<HobbyKey, HobbyInfo> = {
   music: {
     title: 'Music',
     images: ['/images/headphones1.jpg', '/images/headphones2.jpg'],
-    description: 'Creating and experiencing music through various mediums.',
+    description: "Check out my playlist or the concerts I've been to!",
     imageDescriptions: ['Studio setup with premium headphones', 'Live performance equipment'],
-    special: true,
-    spotifyData: {
-      profileUrl: 'https://open.spotify.com/user/dominicldm',
-      recentTracks: [
-        {
-          name: "Bohemian Rhapsody",
-          artist: "Queen", 
-          album: "A Night at the Opera",
-          embedId: "4u7EnebtmKI"
-        },
-        {
-          name: "Stairway to Heaven",
-          artist: "Led Zeppelin",
-          album: "Led Zeppelin IV", 
-          embedId: "QkF3oxziUI4"
-        }
-      ],
-      stats: {
-        topGenre: "Rock",
-        hoursListened: 247,
-        topArtist: "Queen"
-      }
-    }
   },
   theatre: {
     title: 'Theatre',
@@ -109,9 +72,9 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
     ]
   },
   photos: {
-    title: 'Photography',
+    title: 'Cool photos!',
     images: ['/images/photo1.jpg', '/images/photo2.jpg'],
-    description: 'Capturing moments and perspectives through the lens.',
+    description: 'Fun memories and nice photos I\'ve taken over the years :)',
     imageDescriptions: [
       'Golden hour cityscape from rooftop',
       'Street photography in old town'
@@ -127,21 +90,36 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
     ]
   },
   gaming: {
-    title: 'Gaming',
-    images: ['/images/gaming1.jpg', '/images/gaming2.jpg'],
-    description: 'Competitive gaming and exploring interactive digital worlds.',
+    title: 'Esports',
+    images: ['/esports/fnatic.jpg', '/esports/toronto.jpg', '/esports/optic.jpg', '/esports/stage.jpg', '/esports/trophy.jpg', '/esports/benja.jpg', '/esports/shaiiko.jpg', '/esports/noaura.jpg', '/esports/w7m.jpg'],
+    description: "Whether it's watching or playing, I'm a huge fan of competitive gaming.",
     imageDescriptions: [
-      'Tournament setup with dual monitors',
-      'Victory celebration after ranked match'
+      'Watching Fnatic at VCT Masters Toronto!',
+      '7 hour train ride was worth it!',
+      'COD Champs in Kitchener, the Green Wall made it entertaining!',
+      'Rainbow Six Siege in Montreal, the atmosphere was incredible (and chilly)!',
+      "Dope trophy",
+      "Me with Benjamaster!",
+      "Shaiiko after their unfortunate loss :(",
+      "I need to go to more LANs",
+      "w7m beating the home crowd was awesome!"
     ]
   },
   skiing: {
     title: 'Skiing',
-    images: ['/images/skiing1.jpg', '/images/skiing2.jpg'],
-    description: 'Carving through fresh powder and embracing winter adventures.',
+    images: ['/skiing/omg.jpg', '/skiing/omd.jpg', '/skiing/pezants.jpg', '/skiing/trio.jpg', '/skiing/insane.jpg', '/skiing/massif.jpg', '/skiing/msa.jpg', '/skiing/sleepy.jpg', '/skiing/nice.jpg', '/skiing/river.jpg'],
+    description: 'Fun fact: I\'ve skied since I was 2 years old!',
     imageDescriptions: [
-      'Fresh tracks on untouched slopes',
-      'Sunset run down the mountain'
+      'Le Massif, the best day I\'ve ever skied',
+      'Cheeky triple black',
+      'Software Engineers go skiing!',
+      'Sending it with friends',
+      'Gorgeous view',
+      'I lost my phone 10 minutes later',
+      'Mont Saint Anne in the fog!',
+      'Sleepy on the bunny hill',
+      'Tremblant but make it Ontario',
+      'Quebec > BC'
     ]
   }
 }
@@ -492,6 +470,30 @@ function DesktopImageGallery({
   );
 }
 
+// Enhanced Spotify Embed Component
+function SpotifyEmbed() {
+  return (
+    <div className="w-full h-full flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl bg-gradient-to-br from-purple-900/20 to-green-900/20 rounded-2xl p-6 border border-green-400/30 backdrop-blur-sm">
+        <div className="flex items-center gap-3 mb-4 text-green-200">
+          <Music size={24} />
+          <h3 className="text-xl font-semibold">My Playlist</h3>
+        </div>
+        <iframe
+          src="https://open.spotify.com/embed/playlist/3u5OZuYxm9ACE873KRheVC?utm_source=generator"
+          width="100%"
+          height="380"
+          frameBorder="0"
+          allow="encrypted-media"
+          className="rounded-xl shadow-lg"
+        />
+        <p className="text-green-200/70 text-sm mt-3 text-center">
+          Enjoy listening! 🎵
+        </p>
+      </div>
+    </div>
+  );
+}
 // Main AdaptiveImageGallery component
 function AdaptiveImageGallery({ 
   images, 
@@ -530,147 +532,72 @@ function AdaptiveImageGallery({
   }
 }
 
-// Spotify Integration Component
-function SpotifySection({ spotifyData }: { spotifyData: any }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  return (
-    <div className="space-y-6">
-      {/* Header with Spotify branding */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/20 to-green-400/20 border border-green-400/30 rounded-2xl px-6 py-4 mb-4">
-          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-            <Music size={16} className="text-white" />
-          </div>
-          <h3 className="text-xl font-semibold text-green-300">Now Playing on Spotify</h3>
-        </div>
-        {/* Spotify profile link */}
-        <a
-          href={spotifyData.profileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-green-300 hover:text-green-200 transition-colors duration-300 text-sm group"
-        >
-          Follow my Spotify profile
-          <ExternalLink size={14} className="group-hover:scale-110 transition-transform duration-200" />
-        </a>
-      </div>
-
-      {/* Music Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border border-purple-400/30 rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-purple-200">{spotifyData.stats.hoursListened}</div>
-          <div className="text-purple-300/80 text-sm">Hours Listened</div>
-        </div>
-        <div className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border border-purple-400/30 rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-purple-200">{spotifyData.stats.topGenre}</div>
-          <div className="text-purple-300/80 text-sm">Top Genre</div>
-        </div>
-        <div className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border border-purple-400/30 rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-purple-200">{spotifyData.stats.topArtist}</div>
-          <div className="text-purple-300/80 text-sm">Top Artist</div>
-        </div>
-      </div>
-
-      {/* Recent Tracks */}
-      <div className="space-y-4">
-        <h4 className="text-lg font-semibold text-purple-200 text-center">Recent Favorites</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {spotifyData.recentTracks.map((track: any, index: number) => (
-            <div
-              key={index}
-              className="bg-gradient-to-br from-gray-900/60 to-purple-900/40 border border-purple-400/20 hover:border-green-400/40 rounded-xl p-4 transition-all duration-300 group hover:scale-102 hover:shadow-lg hover:shadow-purple-500/20"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-purple-500 rounded-lg flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                  <Music size={20} className="text-white relative z-10" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-purple-400/20 group-hover:from-green-400/40 group-hover:to-purple-400/40 transition-all duration-300"></div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h5 className="text-white font-semibold truncate group-hover:text-green-200 transition-colors duration-300">
-                    {track.name}
-                  </h5>
-                  <p className="text-purple-300 text-sm truncate">{track.artist}</p>
-                  <p className="text-purple-400/80 text-xs truncate">{track.album}</p>
-                </div>
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-400/30 hover:border-green-400/50 rounded-full text-green-300 hover:text-green-200 transition-all duration-300"
-                >
-                  {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // HobbiesModal component
 function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
   const data = hobbyData[hobby];
+  const [activeTab, setActiveTab] = useState<'gallery' | 'playlist'>('gallery');
+  
   if (!data) return null;
 
-  if (data.special) {
-    // Enhanced Spotify/Music template
-    return (
-      <div className="px-4 sm:px-6 md:px-8 lg:px-12 max-w-6xl w-full h-full overflow-y-auto">
-        <div className="space-y-8">
-          {/* Title with cosmic styling */}
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4">
-              {data.title}
-            </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-purple-400 to-pink-400 mx-auto rounded-full mb-6"></div>
-            <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
-              {data.description}
-            </p>
+  // Only show tabs for music hobby
+  const showTabs = hobby === 'music';
+
+  return (
+    <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full h-full overflow-y-auto flex flex-col">
+      <div className="space-y-6 flex-1 flex flex-col min-h-0">
+        {/* Title section */}
+        <div className="text-center flex-shrink-0 mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300">
+            {data.title}
+          </h2>
+          <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
+            {data.description}
+          </p>
+        </div>
+
+        {/* Tab navigation for music hobby */}
+        {showTabs && (
+          <div className="flex justify-center mb-4">
+            <div className="bg-purple-800/30 backdrop-blur-sm rounded-xl p-1 border border-purple-400/20">
+              <button
+                onClick={() => setActiveTab('gallery')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activeTab === 'gallery' 
+                    ? 'bg-purple-600/60 text-white shadow-md' 
+                    : 'text-purple-200/80 hover:text-white hover:bg-purple-600/30'
+                }`}
+              >
+                Gallery
+              </button>
+              <button
+                onClick={() => setActiveTab('playlist')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activeTab === 'playlist' 
+                    ? 'bg-green-600/60 text-white shadow-md' 
+                    : 'text-green-200/80 hover:text-white hover:bg-green-600/30'
+                }`}
+              >
+                Playlist
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Spotify Integration */}
-          <SpotifySection spotifyData={data.spotifyData} />
-
-          {/* Image Gallery */}
-          <div className="space-y-4">
-            <h4 className="text-xl font-semibold text-purple-200 text-center">Setup & Gear</h4>
+        {/* Content area */}
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          {showTabs && activeTab === 'playlist' ? (
+            <SpotifyEmbed />
+          ) : (
             <AdaptiveImageGallery 
               images={data.images}
               descriptions={data.imageDescriptions || []}
               title={data.title}
             />
-          </div>
+          )}
         </div>
       </div>
-    );
-  }
-
-  // Enhanced template for other hobbies
-return (
-  <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full h-full overflow-y-auto flex flex-col">
-    <div className="space-y-6 flex-1 flex flex-col min-h-0">
-      {/* Enhanced title section */}
-      <div className="text-center flex-shrink-0 mb-4">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl pt-4 md:pt-0 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 md:mb-4 mb-2">
-          {data.title}
-        </h2>
-        <p className="text-purple-200/90 text-lg max-w-2xl mx-auto leading-relaxed">
-          {data.description}
-        </p>
-      </div>
-
-      {/* Image Gallery - This will now expand to fill available space */}
-      <div className="flex-1 flex items-center justify-center min-h-0">
-        <AdaptiveImageGallery 
-          images={data.images}
-          descriptions={data.imageDescriptions || []}
-          title={data.title}
-        />
-      </div>
     </div>
-  </div>
-);
+  );
 }
 
 function latLonToPosition(
