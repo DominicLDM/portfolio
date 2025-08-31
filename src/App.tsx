@@ -46,9 +46,9 @@ type HobbyInfo = {
 const hobbyData: Record<HobbyKey, HobbyInfo> = {
   music: {
     title: 'Music',
-    images: ['/images/headphones1.jpg', '/images/headphones2.jpg'],
+    images: ['/music/phoneboy.jpg', '/music/boyphone.jpg', '/music/rob.jpg', '/music/valley.jpg', '/music/wrecks.jpg', '/music/goodkid.jpg', '/music/bwu.jpg', '/music/hey.jpg', '/music/alec.jpg'],
     description: "Check out my playlist or the concerts I've been to!",
-    imageDescriptions: ['Studio setup with premium headphones', 'Live performance equipment'],
+    imageDescriptions: ['Phoneboy Heartbreak Designer in Toronto!', 'W', 'I saw a band called Valley <3', 'SE concert!!', 'The Wrecks in Montreal', 'Good Kid!!', 'BoyWithUke without the mask', 'Hey, Nothing', "Alec Benjamin"],
   },
   theatre: {
     title: 'Theatre',
@@ -127,11 +127,13 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
 function MobileImageGallery({ 
   images, 
   descriptions, 
-  title 
+  title,
+  shrink
 }: {
   images: string[];
   descriptions: string[];
   title: string;
+  shrink: boolean;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -214,8 +216,9 @@ function MobileImageGallery({
         {/* Maximized image container */}
         <div 
           ref={containerRef}
-          className="relative w-full h-full max-w-[calc(100vw-60px)] max-h-[calc(75svh-80px)] 
-                     flex items-center justify-center px-6"
+          className={`relative w-full h-full max-w-[calc(100vw-60px)]
+                        flex items-center justify-center px-6
+                        ${shrink ? "max-h-[calc(75svh-100px)]" : "max-h-[calc(75svh-80px)]"}`}
         >
           {/* Main image with optimized sizing */}
           <div className="relative w-full h-full rounded-xl overflow-hidden 
@@ -260,11 +263,13 @@ function MobileImageGallery({
 function DesktopImageGallery({ 
   images, 
   descriptions, 
-  title 
+  title,
+  shrink
 }: {
   images: string[];
   descriptions: string[];
   title: string;
+  shrink: boolean;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -390,10 +395,10 @@ function DesktopImageGallery({
       finalWidth = maxWidth;
       finalHeight = finalWidth / aspectRatio;
     }
-    
+    const scale = shrink ? 0.9 : 1;
     return {
-      width: Math.floor(finalWidth),
-      height: Math.floor(finalHeight)
+      width: Math.floor(finalWidth * scale),
+      height: Math.floor(finalHeight * scale)
     };
   }, [imageDimensions, containerSize]);
 
@@ -472,37 +477,100 @@ function DesktopImageGallery({
 
 // Enhanced Spotify Embed Component
 function SpotifyEmbed() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [iframeHeight, setIframeHeight] = useState('352px');
+
+  useEffect(() => {
+    const calculateHeight = () => {
+      if (!containerRef.current) return;
+      
+      // Find the modal container
+      const modal = containerRef.current.closest('[style*="max-height"]');
+      if (!modal) return;
+      
+      // Get the actual modal height
+      const modalRect = modal.getBoundingClientRect();
+      const modalHeight = modalRect.height;
+      
+      // Find and measure the title section (h2 + p)
+      const titleSection = modal.querySelector('h2');
+      const descriptionSection = modal.querySelector('h2 + p');
+      let titleHeight = 0;
+      if (titleSection) titleHeight += titleSection.getBoundingClientRect().height;
+      if (descriptionSection) titleHeight += descriptionSection.getBoundingClientRect().height;
+      
+      // Find and measure tab navigation
+      const tabNavigation = modal.querySelector('[class*="bg-purple-800/30"]');
+      const tabHeight = tabNavigation ? tabNavigation.getBoundingClientRect().height : 0;
+      
+      // Account for all the margins and padding
+      const modalPadding = 64; // px-4 sm:px-6 md:px-8 lg:px-12 + vertical space
+      const spotifyContainerPadding = 32; // p-4 on spotify container
+      const spotifyInnerPadding = 40; // p-5 on inner container  
+      const spotifyHeaderHeight = 52; // Music icon + title + mb-4
+      const margins = 48; // Various margins between elements
+      
+      const totalUsedSpace = titleHeight + tabHeight + modalPadding + 
+                            spotifyContainerPadding + spotifyInnerPadding + 
+                            spotifyHeaderHeight + margins;
+      
+      // Calculate available height for iframe
+      const availableHeight = modalHeight - totalUsedSpace;
+      let finalHeight;
+      if (window.innerWidth <= 375 || window.innerHeight <= 667) {
+        finalHeight = 250;
+      } else if (window.innerWidth > 3000) {
+        finalHeight = 750;
+      } else if (window.innerWidth > 2560) {
+        finalHeight = 500;
+      } else {
+        finalHeight = Math.max(352, Math.floor(availableHeight));
+      }
+      setIframeHeight(`${finalHeight}px`);
+    };
+
+    // Initial calculation
+    setTimeout(calculateHeight, 100); // Small delay to ensure DOM is ready
+    
+    // Recalculate on window resize
+    window.addEventListener('resize', calculateHeight);
+    
+    return () => window.removeEventListener('resize', calculateHeight);
+  }, []);
+
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-gradient-to-br from-purple-900/20 to-green-900/20 rounded-2xl p-6 border border-green-400/30 backdrop-blur-sm">
+    <div ref={containerRef} className="h-[(calc(70svh-100px))] md:max-w-[40vw] max-w-[90vw] w-full flex items-center justify-center py-4">
+      <div className="w-full h-full bg-gradient-to-br from-purple-900/20 to-green-900/20 rounded-2xl p-5 border border-green-400/30 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-4 text-green-200">
           <Music size={24} />
           <h3 className="text-xl font-semibold">My Playlist</h3>
         </div>
+        <div className="h-full w-full">
         <iframe
           src="https://open.spotify.com/embed/playlist/3u5OZuYxm9ACE873KRheVC?utm_source=generator"
-          width="100%"
-          height="380"
           frameBorder="0"
           allow="encrypted-media"
+          height={iframeHeight}
+          width="100%"
           className="rounded-xl shadow-lg"
         />
-        <p className="text-green-200/70 text-sm mt-3 text-center">
-          Enjoy listening! 🎵
-        </p>
+        </div>
       </div>
     </div>
   );
 }
+
 // Main AdaptiveImageGallery component
 function AdaptiveImageGallery({ 
   images, 
   descriptions, 
-  title 
+  title,
+  shrink
 }: {
   images: string[];
   descriptions: string[];
   title: string;
+  shrink: boolean;
 }) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -526,9 +594,9 @@ function AdaptiveImageGallery({
   }, []);
 
   if (isMobile) {
-    return <MobileImageGallery images={images} descriptions={descriptions} title={title} />;
+    return <MobileImageGallery images={images} descriptions={descriptions} title={title} shrink={shrink} />;
   } else {
-    return <DesktopImageGallery images={images} descriptions={descriptions} title={title} />;
+    return <DesktopImageGallery images={images} descriptions={descriptions} title={title} shrink={shrink} />;
   }
 }
 
@@ -543,7 +611,7 @@ function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
   const showTabs = hobby === 'music';
 
   return (
-    <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full h-full overflow-y-auto flex flex-col">
+    <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full h-full max-h-[calc(100svh-100px)] overflow-y-auto flex flex-col">
       <div className="space-y-6 flex-1 flex flex-col min-h-0">
         {/* Title section */}
         <div className="text-center flex-shrink-0 mb-4">
@@ -561,7 +629,7 @@ function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
             <div className="bg-purple-800/30 backdrop-blur-sm rounded-xl p-1 border border-purple-400/20">
               <button
                 onClick={() => setActiveTab('gallery')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                className={`px-4 py-2 cursor-pointer rounded-lg text-sm font-medium transition-all duration-300 ${
                   activeTab === 'gallery' 
                     ? 'bg-purple-600/60 text-white shadow-md' 
                     : 'text-purple-200/80 hover:text-white hover:bg-purple-600/30'
@@ -571,10 +639,10 @@ function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
               </button>
               <button
                 onClick={() => setActiveTab('playlist')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all duration-300 ${
                   activeTab === 'playlist' 
-                    ? 'bg-green-600/60 text-white shadow-md' 
-                    : 'text-green-200/80 hover:text-white hover:bg-green-600/30'
+                    ? 'bg-green-200 text-black shadow-md' 
+                    : 'text-green-200 hover:text-white hover:bg-green-200/80'
                 }`}
               >
                 Playlist
@@ -592,6 +660,7 @@ function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
               images={data.images}
               descriptions={data.imageDescriptions || []}
               title={data.title}
+              shrink={showTabs}
             />
           )}
         </div>
@@ -2354,7 +2423,7 @@ function flyToLandmarkAndOpenModal(section: string) {
             activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-[95vw] md:max-w-[85vw]' : 'md:p-8 max-w-4xl'
           } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
           style={{ 
-            maxHeight: '95vh',
+            maxHeight: 'calc(100svh - 100px)',
             height: 'auto',
             display: 'flex',
             flexDirection: 'column'
