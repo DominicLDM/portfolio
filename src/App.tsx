@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
-import { Github, ChevronLeft, ChevronRight, Music } from 'lucide-react'
+import { Github, ChevronLeft, ChevronRight } from 'lucide-react'
 import { EffectComposer, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
@@ -73,17 +73,51 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   },
   photos: {
     title: 'Cool photos!',
-    images: ['/images/photo1.jpg', '/images/photo2.jpg'],
+    images: ['/pics/enoshima.jpg', '/pics/fuji.jpg', '/pics/arctic.jpg', '/pics/spike.jpg', '/pics/aurora.jpg', '/pics/swan.jpg', '/pics/shrine.jpg', '/pics/poutine.jpg', '/pics/island.jpg', '/pics/chow.jpg', '/pics/bamboo.jpg', '/pics/dp.jpg', '/pics/train.jpg', '/pics/tree.jpg', '/pics/goat.jpg', '/pics/nice.jpg', '/pics/lights.jpg', '/pics/speaker.jpg', '/pics/water.jpg', '/pics/turtle.jpg', '/pics/coolio.jpg', '/pics/night.jpg', '/pics/vibes.jpg', '/pics/taleng.jpg', '/pics/robot.jpg', '/pics/slush.jpg', '/pics/wall.png', '/pics/tower.jpg', '/pics/tori.jpg', '/pics/peace.jpg', '/pics/stairs.jpg', '/pics/me.jpg', '/pics/cool.jpg', '/pics/ice.jpg'],
     description: 'Fun memories and nice photos I\'ve taken over the years :)',
     imageDescriptions: [
-      'Golden hour cityscape from rooftop',
-      'Street photography in old town'
+      'Japanese sunset over Enoshima and Fuji',
+      'Fujisan',
+      'Iced over Georgian Bay',
+      'Vieux Montreal',
+      'Waterloo Aurora',
+      'Swan let me get so close!',
+      'So green',
+      'POUTINE POUTINE POUTINE',
+      'Pretty Japanese coastline',
+      'Olivia Chow!',
+      'Bamboo',
+      'My fav building on campus',
+      'Shinjuku Station',
+      'Very natural tree',
+      'Unreal',
+      'Also unreal',
+      'Chicago airport',
+      'Speaker legend!',
+      'Drifting',
+      'Apparently this guy is famous??',
+      'Columbia Lake',
+      'DP at night',
+      'Lake Fujikawaguchi',
+      'Taleng',
+      'FRC',
+      'SLUSHIES!',
+      'O-week',
+      'Tokyo Tower',
+      'The best Tori gate',
+      'Middle of nowhere',
+      'Stairs',
+      'Spontaneous Japan trip was worth it',
+      'neato',
+      'a bit chilly'
+
+
     ]
   },
   cities: {
-    title: 'Urban Exploration',
+    title: 'Cities',
     images: ['/images/city1.jpg', '/images/city2.jpg'],
-    description: 'Discovering the unique character and hidden gems of urban landscapes.',
+    description: 'Skylines, transit, and everything in between.',
     imageDescriptions: [
       'Downtown skyline during blue hour',
       'Historic district cobblestone streets'
@@ -217,11 +251,11 @@ function MobileImageGallery({
         <div 
           ref={containerRef}
           className={`relative w-full h-full max-w-[calc(100vw-60px)]
-                        flex items-center justify-center px-6
+                        flex items-center justify-center px-6 
                         ${shrink ? "max-h-[calc(75svh-100px)]" : "max-h-[calc(75svh-80px)]"}`}
         >
           {/* Main image with optimized sizing */}
-          <div className="relative w-full h-full rounded-xl overflow-hidden 
+          <div className="relative w-full h-full rounded-xl overflow-hidden
                          bg-gradient-to-br from-purple-900/15 to-indigo-900/15 
                          border border-purple-400/25">
             <img
@@ -517,7 +551,7 @@ function SpotifyEmbed() {
       // Calculate available height for iframe
       const availableHeight = modalHeight - totalUsedSpace;
       let finalHeight;
-      if (window.innerWidth <= 375 || window.innerHeight <= 667) {
+      if (window.innerWidth <= 375) {
         finalHeight = 250;
       } else if (window.innerWidth > 3000) {
         finalHeight = 750;
@@ -539,12 +573,8 @@ function SpotifyEmbed() {
   }, []);
 
   return (
-    <div ref={containerRef} className="h-[(calc(70svh-100px))] md:max-w-[40vw] max-w-[90vw] w-full flex items-center justify-center py-4">
-      <div className="w-full h-full bg-gradient-to-br from-purple-900/20 to-green-900/20 rounded-2xl p-5 border border-green-400/30 backdrop-blur-sm">
-        <div className="flex items-center gap-3 mb-4 text-green-200">
-          <Music size={24} />
-          <h3 className="text-xl font-semibold">My Playlist</h3>
-        </div>
+    <div ref={containerRef} className="h-[(calc(70svh-100px))] md:max-w-[40vw] max-w-[90vw] w-full flex items-center justify-center py-4 pt-0">
+      <div className="w-full h-full bg-gradient-to-br from-purple-900/20 to-green-900/20 rounded-2xl p-0 border border-green-400/30 backdrop-blur-sm">
         <div className="h-full w-full">
         <iframe
           src="https://open.spotify.com/embed/playlist/3u5OZuYxm9ACE873KRheVC?utm_source=generator"
