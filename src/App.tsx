@@ -2303,71 +2303,66 @@ function flyToLandmarkAndOpenModal(section: string) {
       )}
 
       {/* Enhanced Mobile menu with space theme */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          {/* Enhanced backdrop with space theme */}
-          <div 
-            className="absolute inset-0 backdrop-blur-md transition-all duration-500"
-            style={{ backgroundColor: 'rgba(120, 110, 255, 0.12)' }}
-            onClick={toggleMobileMenu} 
-          />
-          
-          {/* Floating menu container */}
-          <div className={`absolute top-20 left-4 right-4 max-w-sm mx-auto transition-all duration-700 ${
-            isMobileMenuOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-8 scale-95'
-          }`}>
-            <div className="bg-[rgba(20,20,40,0.85)] border-[3px] border-indigo-300/70 rounded-2xl p-6 shadow-lg shadow-indigo-500/30 backdrop-blur-xl relative overflow-hidden">
-              {/* Subtle animated background pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/30 to-purple-800/20 opacity-50" />
-              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,0.1)_0%,transparent_50%)]" />
-              <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.08)_0%,transparent_50%)]" />
+      <div className={`fixed inset-0 z-400 md:hidden transition-opacity duration-500 ${
+        isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}>
+        {/* Enhanced backdrop with space theme */}
+        <div 
+          className="absolute inset-0 transition-all duration-500"
+          onClick={toggleMobileMenu} 
+        />
+        
+        {/* Floating menu container */}
+        <div className={`absolute z-100 top-20 left-4 right-4 blur-mdmax-w-sm mx-auto transition-all duration-500 ${
+          isMobileMenuOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-8 scale-95'
+        }`}>
+          <div className="bg-[rgba(20,20,40,0.85)] border-[3px] border-indigo-300/70 rounded-2xl p-6 shadow-lg shadow-indigo-500/30 backdrop-blur-xl relative overflow-hidden">
+            {/* Subtle animated background pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/30 to-purple-800/20 opacity-50" />
+            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,0.1)_0%,transparent_50%)]" />
+            <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.08)_0%,transparent_50%)]" />
 
-              {/* Menu title */}
-              <div className="relative z-10 mb-6 mt-1">
-                <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 text-center">
-                  Navigation
-                </h3>
-              </div>
-
-              {/* Enhanced navigation */}
-              <nav className="space-y-3 relative z-10">
-                {["About", "Experience", "Projects", "Hobbies"].map((item, index) => (
-                  <button
-                    key={item}
-                    onClick={() => openModal(item.toLowerCase())}
-                    className={`flex items-center w-full text-left transition-all duration-500 font-medium tracking-wide py-4 px-4 rounded-xl group cursor-pointer relative overflow-hidden border border-transparent hover:border-pink-300/40 bg-gradient-to-r from-purple-700/10 to-indigo-700/10 hover:from-purple-600/25 hover:to-pink-600/25 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 ${
-                      isMobileMenuOpen ? 'animate-in slide-in-from-left-3 fade-in' : ''
-                    }`}
-                    style={{ 
-                      animationDelay: `${(index + 1) * 0.1}s`,
-                      animationDuration: '0.6s',
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    {/* Subtle hover background effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-pink-500/0 to-purple-500/0 group-hover:from-purple-500/10 group-hover:via-pink-500/15 group-hover:to-purple-500/10 transition-all duration-500 rounded-xl" />
-                    
-                    {/* Content */}
-                    <div className="relative z-10 flex items-center w-full">
-                      <span className="text-purple-300 font-bold mr-4 text-lg transition-all duration-300 group-hover:text-pink-300 group-hover:scale-110">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <span className="text-purple-200 group-hover:text-pink-200 transition-colors duration-300 text-base">
-                        {item}
-                      </span>
-                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 text-purple-300 group-hover:text-pink-300 transform translate-x-2 group-hover:translate-x-0">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                      </div>
+            {/* Enhanced navigation */}
+            <nav className="space-y-3 relative z-10">
+              {["About", "Experience", "Projects", "Hobbies"].map((item, index) => (
+                <button
+                  key={item}
+                  onClick={() => {
+                    openModal(item.toLowerCase());
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center w-full text-left transition-all duration-500 font-medium tracking-wide py-4 px-4 rounded-xl group cursor-pointer relative overflow-hidden border border-transparent hover:border-pink-300/40 bg-gradient-to-r from-purple-700/10 to-indigo-700/10 hover:from-purple-600/25 hover:to-pink-600/25 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 ${
+                    isMobileMenuOpen ? 'animate-in slide-in-from-left-3 fade-in' : ''
+                  }`}
+                  style={{ 
+                    animationDelay: `${(index + 1) * 0.1}s`,
+                    animationDuration: '0.6s',
+                    animationFillMode: 'both'
+                  }}
+                >
+                  {/* Subtle hover background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-pink-500/0 to-purple-500/0 group-hover:from-purple-500/10 group-hover:via-pink-500/15 group-hover:to-purple-500/10 transition-all duration-500 rounded-xl" />
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex items-center w-full">
+                    <span className="text-purple-300 font-bold mr-4 text-lg transition-all duration-300 group-hover:text-pink-300 group-hover:scale-110">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-purple-200 group-hover:text-pink-200 transition-colors duration-300 text-base">
+                      {item}
+                    </span>
+                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 text-purple-300 group-hover:text-pink-300 transform translate-x-2 group-hover:translate-x-0">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
                     </div>
-                  </button>
-                ))}
-              </nav>
-            </div>
+                  </div>
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Reset button - only show when UI is visible */}
       {showUI && (
