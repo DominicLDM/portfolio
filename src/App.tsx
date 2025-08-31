@@ -116,11 +116,43 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   },
   cities: {
     title: 'Cities',
-    images: ['/images/city1.jpg', '/images/city2.jpg'],
-    description: 'Skylines, transit, and everything in between.',
+    images: ['/city/trono2.jpg', '/city/shibuya.jpg', '/city/mtl.jpg', '/city/edge.jpg', '/city/neon.jpg', '/city/one.jpg', '/city/shibuya2.jpg', '/city/swan.jpg', '/city/wtc.jpg', '/city/skytree.jpg', '/city/rain.jpg', '/city/large.jpg', '/city/glow.jpg', '/city/azubadai.jpg', '/city/endless.jpg', '/city/happy.jpg', '/city/harajuku.jpg', '/city/moon.jpg', '/city/oly.jpg', '/city/rock.jpg', '/city/yourname.jpg', '/city/trono.jpg', '/city/tall.jpg', '/city/nuns.jpg', '/city/doof.jpg', '/city/ike.jpg', '/city/market.jpg', '/city/rain2.jpg', '/city/rain3.jpg', '/city/rain4.jpg', '/city/shinjuku.jpg', '/city/square.jpg'],
+    description: 'I\'m super into skylines, transit, and everything in between.',
     imageDescriptions: [
-      'Downtown skyline during blue hour',
-      'Historic district cobblestone streets'
+      'Toronto skyline is perfection',
+      'Shibuya Sky!',
+      'Mont Royal',
+      'On the Edge',
+      'Rainy Akhibara nights',
+      'The One',
+      'pretty colours',
+      'swan!',
+      'Beautiful building',
+      'I swear it\'s the CN tower',
+      'Asakusa streets',
+      'Billionaire\'s Row',
+      'purple',
+      'Azabudai Hills',
+      'New York core',
+      'Top tier sunset',
+      'Harajuku!',
+      'Blood moon over Montreal',
+      'Olympic Village',
+      'Midtown',
+      'Kimi no Na Wa',
+      'colours',
+      'Funky architecture',
+      'Nun\'s Island',
+      'Doofenschmirtz Evil Inc.',
+      'Ikebukuro',
+      'silly sign',
+      'rain',
+      'more rain',
+      'can you tell I like rainy nights',
+      'shinjuku',
+      'scramble'
+
+      
     ]
   },
   gaming: {
