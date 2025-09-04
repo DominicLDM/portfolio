@@ -2594,7 +2594,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                       <ProjectCard
                         image="/images/glasses.jpg"
                         name="GLASSES"
-                        tech={["Python", "JFlask", "React Native ", "Javascript", "Raspberry Pi"]}
+                        tech={["Python", "Flask", "React Native ", "Javascript", "Raspberry Pi"]}
                         description="The Graphical Light Assisted Sound Sensor Eyewear System (GLASSES) is a wearable pair of glasses with built in song recognition and lyric display. Made in collaboration with Nathan L, Nur I, Peizhe G, Kiersten E, and Jennifer Y!"
                         links={[
                           { href: "https://github.com/DominicLDM/GLASSES", icon: "github", label: "GitHub" }, 
