@@ -2565,12 +2565,12 @@ function flyToLandmarkAndOpenModal(section: string) {
               )}
 
               {activeModal === "projects" && (
-                <div className="px-4 sm:px-6 md:px-8 max-w-7xl w-full h-full flex flex-col">
+                <div className="px-4 sm:px-6 md:px-8 w-full h-full flex flex-col">
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 pb-4 sm:pb-6 md:pb-6 text-center md:pt-0 pt-4">
                     Projects
                   </h2>
                   <div className="flex-1 overflow-y-scroll max-h-[calc(90vh-160px)] pr-1 projects-scrollbar">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 pb-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6 pb-4">
                       <ProjectCard
                         image="/images/preview.png"
                         name="uwGuessr"
