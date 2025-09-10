@@ -2550,7 +2550,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                       <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Engineer Intern</h3>
                       <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">ALS Geoanalytics • May 2025 - Aug 2025</p>
                       <p className="leading-relaxed text-white/90 text-sm sm:text-base">
-                        Built a full-stack geoanalytics platform with AI-driven data processing, cloud-native architecture, and real-time dashboards, streamlining geoscience document analysis and cutting data labeling time from minutes to seconds.
+                        Built a fullstack geoanalytics platform with AI-driven data processing, cloud-native architecture, and real-time dashboards, streamlining geoscience document analysis and cutting data labeling time from minutes to seconds.
                       </p>
                     </div>
                     <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 mb-6 hover:border-pink-300/60 transition-all duration-300 group">
