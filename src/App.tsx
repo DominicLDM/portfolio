@@ -1667,32 +1667,28 @@ function LoadingScreen({ isVisible, progress }: { isVisible: boolean; progress: 
         </div>
         
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
-          Loading the Universe...
+          {progress === 0 && "Loading the Universe..."}
+          {progress > 0 && progress < 25 && "Initializing Earth..."}
+          {progress >= 25 && progress < 50 && "Summoning Geese..."}
+          {progress >= 50 && progress < 75 && "Setting the Scene..."}
+          {progress >= 75 && progress < 100 && "Final Preparations..."}
+          {progress === 100 && "Welcome to the Universe!"}
         </h2>
         
         {/* Progress Bar */}
-        <div className="w-64 mx-auto mb-4">
-          <div className="flex justify-between text-sm text-purple-300 mb-2">
-            <span>Progress</span>
-            <span>{progress}%</span>
-          </div>
-          <div className="w-full bg-purple-900/30 rounded-full h-2 border border-purple-500/20">
+        <div className="w-64 mx-auto">
+          <div className="w-full bg-purple-900/30 rounded-full h-2 border border-purple-500/20 mb-3">
             <div 
               className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 h-2 rounded-full transition-all duration-500 ease-out shadow-lg shadow-purple-500/30"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
+          <div className="text-center">
+            <span className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300">
+              {progress}%
+            </span>
+          </div>
         </div>
-        
-        {/* Loading Status Text */}
-        <p className="text-sm text-purple-300/80 animate-pulse">
-          {progress === 0 && "Initializing..."}
-          {progress > 0 && progress < 25 && "Loading Earth..."}
-          {progress >= 25 && progress < 50 && "Summoning geese..."}
-          {progress >= 50 && progress < 75 && "Setting the scene..."}
-          {progress >= 75 && progress < 100 && "Final preparations..."}
-          {progress === 100 && "Welcome to the universe!"}
-        </p>
       </div>
     </div>
   )
