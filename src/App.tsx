@@ -761,18 +761,6 @@ function getSurfaceRotation(lat: number, lon: number): [number, number, number] 
   return [rotX, rotY, rotZ];
 }
 
-type RingConfig = {
-  radius: number;
-  tubeRadius: number;
-  yOffset: number;
-  color: string;
-  emissive: string;
-  emissiveIntensity: number;
-  opacity: number;
-  roughness: number;
-  metalness: number;
-};
-
 type LandmarkCoordinateData = {
   model: string;
   lat: number; // Latitude (-90 to 90)
@@ -781,11 +769,10 @@ type LandmarkCoordinateData = {
   scale?: number; // Uniform scale factor
   heightOffset?: number; // Additional height above surface
   customRotation?: [number, number, number]; // Custom rotation override in radians [x, y, z]
-  ringConfig?: RingConfig; // Custom ring configuration
   globeRadius?: number; // Optional globe radius for landmark
 };
 
-// Landmark component with coordinate-based positioning and customizable rings
+// Landmark component with coordinate-based positioning and glowing outline effect
 function CoordinateLandmark({ 
   model, 
   lat, 
@@ -795,7 +782,6 @@ function CoordinateLandmark({
   scale = 1, 
   heightOffset = 0.3,
   customRotation,
-  ringConfig,
   globeRadius = 2.2
 }: {
   model: string,
@@ -806,7 +792,6 @@ function CoordinateLandmark({
   scale?: number,
   heightOffset?: number,
   customRotation?: [number, number, number],
-  ringConfig?: RingConfig,
   globeRadius?: number
 }) {
   const { scene } = useGLTF(model)
@@ -823,7 +808,28 @@ function CoordinateLandmark({
     [lat, lon, customRotation]
   );
 
-  // Helper to clone the scene for highlight
+  // Helper to create a glowing light aura effect
+  const glowAuraScene = useMemo(() => {
+    if (!scene) return null;
+    const clone = scene.clone();
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = new THREE.MeshStandardMaterial({
+          color: '#ffeb3b',
+          emissive: '#ffeb3b',
+          emissiveIntensity: 2.2,
+          transparent: true,
+          opacity: 0.003,
+          wireframe: false,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        });
+      }
+    });
+    return clone;
+  }, [scene]);
+
+  // Helper to clone the scene for hover highlight
   const highlightScene = useMemo(() => {
     if (!scene) return null;
     const clone = scene.clone();
@@ -843,60 +849,27 @@ function CoordinateLandmark({
     return clone;
   }, [scene]);
 
-  // Default ring configuration or use provided config
-  const defaultRingConfig: RingConfig = {
-    radius: 0.65,
-    tubeRadius: 0.09,
-    yOffset: -0.18,
-    color: "#7e8bf5",
-    emissive: "#7e8bf5",
-    emissiveIntensity: 0.7,
-    opacity: 0.82,
-    roughness: 0.35,
-    metalness: 0.45
-  };
-
-  // Use custom ring config or compute from bounding box if no custom config provided
-  const [computedRingConfig, setComputedRingConfig] = useState(defaultRingConfig);
-
-  useEffect(() => {
-    if (ringConfig) {
-      // Use custom ring configuration
-      setComputedRingConfig(ringConfig);
-    } else if (scene) {
-      // Compute ring size from bounding box (original behavior)
-      const bbox = new THREE.Box3().setFromObject(scene);
-      const size = bbox.getSize(new THREE.Vector3());
-      const maxXZ = Math.max(size.x, size.z);
-      const center = bbox.getCenter(new THREE.Vector3());
-      
-      setComputedRingConfig({
-        ...defaultRingConfig,
-        radius: 0.5 + maxXZ * 0.55 * scale,
-        tubeRadius: 0.09 * scale,
-        yOffset: (bbox.min.y - center.y) * scale
-      });
-    }
-  }, [scene, scale, ringConfig]);
-
   // Add a yellow point light for the spotlight landmark only
   const isSpotlight = model === '/models/spotlight.glb';
   return (
     <group position={position} rotation={rotation}>
-      {/* Ring positioned relative to the landmark's local coordinate system */}
-      <mesh position={[0, computedRingConfig.yOffset, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[computedRingConfig.radius, computedRingConfig.tubeRadius, 32, 64]} />
-        <meshStandardMaterial
-          color={computedRingConfig.color}
-          emissive={computedRingConfig.emissive}
-          emissiveIntensity={computedRingConfig.emissiveIntensity}
-          transparent
-          opacity={computedRingConfig.opacity}
-          roughness={computedRingConfig.roughness}
-          metalness={computedRingConfig.metalness}
-          depthWrite={false}
+      {/* Single subtle glow effect */}
+      {glowAuraScene && (
+        <primitive 
+          object={glowAuraScene.clone()} 
+          scale={[scale * 1.02, scale * 1.02, scale * 1.02]} 
         />
-      </mesh>
+      )}
+      
+      {/* Add subtle point light for enhanced glow effect */}
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={0.8}
+        color="#ffeb3b"
+        distance={2.5}
+        decay={1.5}
+      />
+      
       {/* Add yellow point light for spotlight landmark */}
       {isSpotlight && (
         <pointLight
@@ -907,10 +880,11 @@ function CoordinateLandmark({
           decay={1.2}
         />
       )}
-      {/* Highlight mesh */}
+      {/* Hover highlight mesh */}
       {hovered && highlightScene && (
         <primitive object={highlightScene.clone()} scale={scale * 1.05} />
       )}
+      {/* Main landmark object */}
       <primitive
         object={scene}
         scale={[scale, scale, scale]}
@@ -938,18 +912,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'about',
     scale: 0.8,
     heightOffset: -0.067,
-    customRotation: [-0.65, 4,-0.06],
-    ringConfig: {
-      radius: 0.7,
-      tubeRadius: 0.08,
-      yOffset: -0.2,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.6,
-      opacity: 0,
-      roughness: 0.3,
-      metalness: 0.5
-    }
+    customRotation: [-0.65, 4,-0.06]
   },
   {
     model: '/models/Briefcase.glb',
@@ -958,18 +921,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'experience',
     scale: 0.15,
     heightOffset: -0.1,
-    customRotation: [1, -0.7, 1], 
-    ringConfig: {
-      radius: 0.55,
-      tubeRadius: 0.06,
-      yOffset: -0.15,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.8,
-      opacity: 0,
-      roughness: 0.4,
-      metalness: 0.6
-    }
+    customRotation: [1, -0.7, 1]
   },
   {
     model: '/models/laptop.glb',
@@ -978,18 +930,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'projects',
     scale: 0.3,
     heightOffset: -0.1,
-    customRotation: [0.6, 0, -0.12], 
-    ringConfig: {
-      radius: 0.8,
-      tubeRadius: 0.12,
-      yOffset: -0.25,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 1.0,
-      opacity: 0,
-      roughness: 0.2,
-      metalness: 0.7
-    }
+    customRotation: [0.6, 0, -0.12]
   },
   {
     model: '/models/skis.glb',
@@ -998,18 +939,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'skiing',
     scale: 0.45,
     heightOffset: -0.2,
-    customRotation: [-0.3, 0, 0], // Stand them upright with slight tilt
-    ringConfig: {
-      radius: 0.3,
-      tubeRadius: 0.07,
-      yOffset: -0.1,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.5,
-      opacity: 0,
-      roughness: 0.5,
-      metalness: 0.3
-    }
+    customRotation: [-0.3, 0, 0] // Stand them upright with slight tilt
   },
   {
     model: '/models/camera.glb',
@@ -1018,18 +948,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'photos',
     scale: 1,
     heightOffset: 0.35,
-    customRotation: [-0.8, 0, 0.9],
-    ringConfig: {
-      radius: 0.75,
-      tubeRadius: 0.1,
-      yOffset: -0.22,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.7,
-      opacity: 0,
-      roughness: 0.25,
-      metalness: 0.8
-    }
+    customRotation: [-0.8, 0, 0.9]
   },
   {
     model: '/models/controller.glb',
@@ -1038,18 +957,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'gaming',
     scale: 0.025,
     heightOffset: 0,
-    customRotation: [1.3, 0, -0.3],
-    ringConfig: {
-      radius: 0.45,
-      tubeRadius: 0.05,
-      yOffset: -0.12,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.9,
-      opacity: 0,
-      roughness: 0.6,
-      metalness: 0.2
-    }
+    customRotation: [1.3, 0, -0.3]
   },
   {
     model: '/models/esb.glb',
@@ -1058,18 +966,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'cities',
     scale: 0.035,
     heightOffset: 0,
-    customRotation: [0.7, 0.5, 0.7],
-    ringConfig: {
-      radius: 0.5,
-      tubeRadius: 0.08,
-      yOffset: -0.4,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.4,
-      opacity: 0,
-      roughness: 0.8,
-      metalness: 0.9
-    }
+    customRotation: [0.7, 0.5, 0.7]
   },
   {
     model: '/models/headphones.glb',
@@ -1078,18 +975,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'music',
     scale: 0.7,
     heightOffset: 0.2,
-    customRotation: [-1.5, -0.5, 0.7],
-    ringConfig: {
-      radius: 0.85,
-      tubeRadius: 0.11,
-      yOffset: -0.18,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 0.6,
-      opacity: 0,
-      roughness: 0.3,
-      metalness: 0.4
-    }
+    customRotation: [-1.5, -0.5, 0.7]
   },
   {
     model: '/models/spotlight.glb',
@@ -1098,18 +984,7 @@ const COORDINATE_LANDMARKS: LandmarkCoordinateData[] = [
     tab: 'theatre',
     scale: 0.2,
     heightOffset: 0.4,
-    customRotation: [1.3, 0.6, 0.6], // Angle the spotlight down and around
-    ringConfig: {
-      radius: 0.6,
-      tubeRadius: 0.09,
-      yOffset: -0.16,
-      color: "#7e8bf5",
-      emissive: "#7e8bf5",
-      emissiveIntensity: 1.1,
-      opacity: 0,
-      roughness: 0.15,
-      metalness: 0.85
-    }
+    customRotation: [1.3, 0.6, 0.6] // Angle the spotlight down and around
   }
 ];
 
@@ -2434,7 +2309,6 @@ function flyToLandmarkAndOpenModal(section: string) {
                   scale={lm.scale}
                   heightOffset={lm.heightOffset}
                   customRotation={lm.customRotation}
-                  ringConfig={lm.ringConfig}
                   globeRadius={2.2} // Match your Earth scale
                 />
               ))}
