@@ -24,10 +24,10 @@ const useImagePreloader = (imageUrls: string[]) => {
   const preloadImages = useCallback(() => {
     if (imageUrls.length === 0) return;
     
-    // Silently preload all images
+    // Preload all images
     imageUrls.forEach((url) => {
       const img = new Image();
-      img.src = url; // Just set the src, no callbacks needed
+      img.src = url; // Set src, no callbacks
     });
   }, [imageUrls]);
 
@@ -205,15 +205,15 @@ function MobileImageGallery({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use the simple preloader hook (same as desktop)
+  // Use preloader hook
   const { preloadImages } = useImagePreloader(images);
 
-  // Silently preload all images when component mounts (same as desktop)
+  // Preload images on mount
   useEffect(() => {
     preloadImages();
   }, [preloadImages]);
 
-  // Preload adjacent images for smoother navigation (same as desktop)
+  // Preload adjacent images
   useEffect(() => {
     if (images.length <= 1) return;
     
@@ -325,7 +325,7 @@ function MobileImageGallery({
   );
 }
 
-// Desktop Image Gallery Component
+// Desktop Image Gallery
 function DesktopImageGallery({ 
   images, 
   descriptions, 
@@ -343,15 +343,15 @@ function DesktopImageGallery({
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use the simple preloader hook
+  // Use preloader hook
   const { preloadImages } = useImagePreloader(images);
 
-  // Silently preload all images when component mounts
+  // Preload images on mount
   useEffect(() => {
     preloadImages();
   }, [preloadImages]);
 
-  // Preload adjacent images for even smoother navigation
+  // Preload adjacent images
   useEffect(() => {
     if (images.length <= 1) return;
     
@@ -380,11 +380,11 @@ function DesktopImageGallery({
           availableHeight = rect.height;
         }
         
-        // Reserve space for description and buttons
+        // Space for description and buttons
         const descriptionSpace = window.innerWidth < 768 ? 60 : 50;
         const buttonSpace = window.innerWidth < 768 ? 70 : 80;
         
-        // FIXED: Account for navigation arrows taking up space
+        // Account for navigation arrows
         const arrowSpace = window.innerWidth < 600 ? 100 : 120; // Space for left + right arrows + gaps
         
         setContainerSize({
@@ -427,10 +427,10 @@ function DesktopImageGallery({
     }, 200);
   };
 
-  // Calculate image size that fits in available space while preserving aspect ratio
+  // Calculate image dimensions that fit container while preserving aspect ratio
   const imageSize = useMemo(() => {
     if (!imageDimensions || containerSize.width === 0 || containerSize.height === 0) {
-      // FIXED: Much smaller fallback for mobile devices
+      // Mobile fallback size
       const fallbackWidth = window.innerWidth < 600 ? Math.min(250, window.innerWidth - 120) : 400;
       const fallbackHeight = window.innerWidth < 600 ? Math.min(188, window.innerHeight * 0.4) : 300;
       return { width: fallbackWidth, height: fallbackHeight };
@@ -439,11 +439,11 @@ function DesktopImageGallery({
     const { width: imgWidth, height: imgHeight } = imageDimensions;
     const aspectRatio = imgWidth / imgHeight;
     
-    // Calculate maximum dimensions based on container size
+    // Calculate max dimensions from container
     const maxWidth = containerSize.width;
     const maxHeight = containerSize.height;
     
-    // FIXED: Add minimum constraints for very small screens
+    // Minimum size constraints
     const minWidth = window.innerWidth < 600 ? 200 : 300;
     const minHeight = window.innerWidth < 600 ? 150 : 200;
     
@@ -456,7 +456,7 @@ function DesktopImageGallery({
       finalWidth = finalHeight * aspectRatio;
     }
     
-    // FIXED: Ensure we don't exceed screen bounds even with minimums
+    // Don't go below minimum size
     if (finalWidth > maxWidth) {
       finalWidth = maxWidth;
       finalHeight = finalWidth / aspectRatio;
@@ -494,7 +494,7 @@ function DesktopImageGallery({
           style={{
             width: `${imageSize.width}px`,
             height: `${imageSize.height}px`,
-            // FIXED: Remove conflicting max constraints that could cause overflow
+            // Remove conflicting max constraints
             minWidth: window.innerWidth < 600 ? '200px' : '300px',
             minHeight: window.innerWidth < 600 ? '150px' : '200px'
           }}
@@ -541,7 +541,7 @@ function DesktopImageGallery({
   );
 }
 
-// Enhanced Spotify Embed Component
+// Spotify Embed
 function SpotifyEmbed() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [iframeHeight, setIframeHeight] = useState('352px');
@@ -550,7 +550,7 @@ function SpotifyEmbed() {
     const calculateHeight = () => {
       if (!containerRef.current) return;
       
-      // Find the modal container
+      // Get modal container
       const modal = containerRef.current.closest('[style*="max-height"]');
       if (!modal) return;
       
@@ -558,21 +558,21 @@ function SpotifyEmbed() {
       const modalRect = modal.getBoundingClientRect();
       const modalHeight = modalRect.height;
       
-      // Find and measure the title section (h2 + p)
+      // Measure title section
       const titleSection = modal.querySelector('h2');
       const descriptionSection = modal.querySelector('h2 + p');
       let titleHeight = 0;
       if (titleSection) titleHeight += titleSection.getBoundingClientRect().height;
       if (descriptionSection) titleHeight += descriptionSection.getBoundingClientRect().height;
       
-      // Find and measure tab navigation
+      // Measure tab navigation
       const tabNavigation = modal.querySelector('[class*="bg-purple-800/30"]');
       const tabHeight = tabNavigation ? tabNavigation.getBoundingClientRect().height : 0;
       
-      // Account for all the margins and padding
+      // Include margins and padding
       const modalPadding = 64; // px-4 sm:px-6 md:px-8 lg:px-12 + vertical space
       const spotifyContainerPadding = 32; // p-4 on spotify container
-      const spotifyInnerPadding = 40; // p-5 on inner container  
+      const spotifyInnerPadding = 40; // p-5 padding
       const spotifyHeaderHeight = 52; // Music icon + title + mb-4
       const margins = 48; // Various margins between elements
       
@@ -596,7 +596,7 @@ function SpotifyEmbed() {
     };
 
     // Initial calculation
-    setTimeout(calculateHeight, 100); // Small delay to ensure DOM is ready
+    setTimeout(calculateHeight, 100); // Wait for DOM
     
     // Recalculate on window resize
     window.addEventListener('resize', calculateHeight);
@@ -622,7 +622,7 @@ function SpotifyEmbed() {
   );
 }
 
-// Main AdaptiveImageGallery component
+// Image Gallery
 function AdaptiveImageGallery({ 
   images, 
   descriptions, 
@@ -641,7 +641,7 @@ function AdaptiveImageGallery({
     const checkIfMobile = () => {
       const ua = window.navigator.userAgent;
       const isMobileUA = /Mobi|Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua);
-      const isSmallScreen = window.innerWidth < 768; // Common breakpoint for mobile
+      const isSmallScreen = window.innerWidth < 768; // Mobile breakpoint
       
       setIsMobile(isMobileUA || isSmallScreen);
     };
@@ -662,7 +662,7 @@ function AdaptiveImageGallery({
   }
 }
 
-// HobbiesModal component
+// Hobbies Modal
 function HobbiesModal({ hobby }: { hobby: HobbyKey }) {
   const data = hobbyData[hobby];
   const [activeTab, setActiveTab] = useState<'gallery' | 'playlist'>('gallery');
@@ -737,7 +737,7 @@ function latLonToPosition(
   radius: number = 2.2, 
   heightOffset: number = 0
 ): [number, number, number] {
-  const phi = (90 - lat) * DEG_TO_RAD; // Convert to spherical coordinates
+  const phi = (90 - lat) * DEG_TO_RAD; // Spherical coordinates
   const theta = (lon + 180) * DEG_TO_RAD;
   
   const actualRadius = radius + heightOffset;
@@ -753,7 +753,7 @@ function getSurfaceRotation(lat: number, lon: number): [number, number, number] 
   const phi = (90 - lat) * DEG_TO_RAD;
   const theta = (lon + 180) * DEG_TO_RAD;
   
-  // Calculate rotation to align with surface normal
+  // Align with surface
   const rotX = -phi + Math.PI / 2; // Tilt to match surface angle
   const rotY = theta; // Rotate around Y axis for longitude
   const rotZ = 0; // No roll needed for basic vertical alignment
@@ -766,13 +766,13 @@ type LandmarkCoordinateData = {
   lat: number; // Latitude (-90 to 90)
   lon: number; // Longitude (-180 to 180)
   tab: string;
-  scale?: number; // Uniform scale factor
+  scale?: number;
   heightOffset?: number; // Additional height above surface
-  customRotation?: [number, number, number]; // Custom rotation override in radians [x, y, z]
-  globeRadius?: number; // Optional globe radius for landmark
+  customRotation?: [number, number, number]; // Custom rotation [x, y, z]
+  globeRadius?: number;
 };
 
-// Landmark component with coordinate-based positioning and glowing outline effect
+// Coordinate Landmark
 function CoordinateLandmark({ 
   model, 
   lat, 
@@ -1252,7 +1252,7 @@ function Typewriter3D({ onExplodeStart }: {
     }
   }, [animationPhase, onExplodeStart])
 
-  // Animation loop using useFrame for smooth updates
+  // Animation loop
   useFrame(() => {
     if ((animationPhase !== 'exploding' && animationPhase !== 'complete') || letterStates.length === 0) return
     // Update letter positions and properties
@@ -1349,6 +1349,14 @@ function Typewriter3D({ onExplodeStart }: {
 // Goose model
 function Goose(props: any) {
   const { scene } = useGLTF('/models/Goose.glb')
+  useEffect(() => {
+    if (scene && props.onLoaded) {
+      // Add small delay to make loading feel more realistic
+      setTimeout(() => {
+        props.onLoaded();
+      }, 600);
+    }
+  }, [scene, props.onLoaded]);
   return (
     <primitive
       object={scene}
@@ -1378,7 +1386,10 @@ function Galaxy2(props: any) {
   const { scene } = useGLTF('/models/galaxy2.glb')
   useEffect(() => {
     if (scene && props.onLoaded) {
-      props.onLoaded();
+      // Add small delay to make loading feel more realistic
+      setTimeout(() => {
+        props.onLoaded();
+      }, 200);
     }
   }, [scene, props.onLoaded]);
   return (
@@ -1498,6 +1509,14 @@ function Planet4(props: any) {
 
 function Moon(props: any) {
   const { scene } = useGLTF('/models/moon.glb')
+  useEffect(() => {
+    if (scene && props.onLoaded) {
+      // Add small delay to make loading feel more realistic
+      setTimeout(() => {
+        props.onLoaded();
+      }, 400);
+    }
+  }, [scene, props.onLoaded]);
   return (
     <primitive
       object={scene}
@@ -1637,7 +1656,7 @@ function StarsPoints({ count = 1200 }) {
   )
 }
 
-function LoadingScreen({ isVisible }: { isVisible: boolean }) {
+function LoadingScreen({ isVisible, progress }: { isVisible: boolean; progress: number }) {
   return (
     <div className={`fixed inset-0 z-[100] bg-black flex items-center justify-center transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <div className="text-center">
@@ -1650,6 +1669,30 @@ function LoadingScreen({ isVisible }: { isVisible: boolean }) {
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
           Loading the Universe...
         </h2>
+        
+        {/* Progress Bar */}
+        <div className="w-64 mx-auto mb-4">
+          <div className="flex justify-between text-sm text-purple-300 mb-2">
+            <span>Progress</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="w-full bg-purple-900/30 rounded-full h-2 border border-purple-500/20">
+            <div 
+              className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 h-2 rounded-full transition-all duration-500 ease-out shadow-lg shadow-purple-500/30"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
+        
+        {/* Loading Status Text */}
+        <p className="text-sm text-purple-300/80 animate-pulse">
+          {progress === 0 && "Initializing..."}
+          {progress > 0 && progress < 25 && "Loading Earth..."}
+          {progress >= 25 && progress < 50 && "Summoning geese..."}
+          {progress >= 50 && progress < 75 && "Setting the scene..."}
+          {progress >= 75 && progress < 100 && "Final preparations..."}
+          {progress === 100 && "Welcome to the universe!"}
+        </p>
       </div>
     </div>
   )
@@ -1759,7 +1802,7 @@ function ProjectCard({ image, name, tech, description, links }: {
     { href: 'https://github.com/DominicLDM', icon: 'github', label: 'GitHub' },
   ];
 
-// AboutMe component
+// About Me
 function AboutMe() {
   return (
     <section className="px-2 sm:px-4 md:pr-6 md:pl-0 max-w-6xl w-full">
@@ -1863,7 +1906,7 @@ function AboutMe() {
     setTimeout(() => {
       const startPos = new THREE.Vector3(...cameraPos)
       const endPos = new THREE.Vector3(0, 0, 7)
-      const duration = 1.5 // Smooth zoom duration
+      const duration = 1.5 // Zoom duration
       const fps = 60
       const totalFrames = duration * fps
       let frame = 0
@@ -1871,7 +1914,7 @@ function AboutMe() {
       const animateCamera = () => {
         frame++
         const t = Math.min(frame / totalFrames, 1)
-        // Use smooth easing function
+        // Easing function
         const alpha = t * t * (3 - 2 * t)
         const newPos = startPos.clone().lerp(endPos, alpha)
         setCameraPos([newPos.x, newPos.y, newPos.z])
@@ -2109,12 +2152,72 @@ function flyToLandmarkAndOpenModal(section: string) {
 
   const [earthLoaded, setEarthLoaded] = React.useState(false);
   const [galaxy2Loaded, setGalaxy2Loaded] = React.useState(false);
+  const [moonLoaded, setMoonLoaded] = React.useState(false);
+  const [gooseLoaded, setGooseLoaded] = React.useState(false);
+  const [loadingProgress, setLoadingProgress] = React.useState(0);
+
+  // Simulated progress with visible increments
+  React.useEffect(() => {
+    if (!isLoading) return;
+    
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 12 + 3; // Increment by 3-15% each time
+      if (progress >= 85) {
+        progress = 85; // Cap at 85% until real loading completes
+        clearInterval(interval);
+      }
+      setLoadingProgress(Math.floor(Math.min(progress, 85))); // Remove decimals
+    }, 150); // Faster updates
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   React.useEffect(() => {
-    if (earthLoaded && galaxy2Loaded) {
-      setIsLoading(false);
+    // Calculate actual loading progress based on loaded models
+    const loadedCount = [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded].filter(Boolean).length;
+    const actualProgress = Math.round((loadedCount / 4) * 100);
+    
+    console.log('Loading progress:', { earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded, loadedCount, actualProgress });
+
+    if (earthLoaded && galaxy2Loaded && moonLoaded && gooseLoaded) {
+      // Hit 100% at the end
+      setLoadingProgress(prev => {
+        if (prev < 100) {
+          // Animate from current progress to 100%
+          let current = prev;
+          const increment = setInterval(() => {
+            current += 5;
+            if (current >= 100) {
+              current = 100;
+              clearInterval(increment);
+              // Hide loading screen after reaching 100%
+              setTimeout(() => {
+                setIsLoading(false);
+              }, 500);
+            }
+            setLoadingProgress(Math.floor(current)); // Remove decimals
+          }, 50);
+        }
+        return prev;
+      });
+      
+      // Preload critical hobby images in background after main scene loads
+      setTimeout(() => {
+        const criticalImages = [
+          '/images/about me.jpg',
+          '/music/phoneboy.jpg',
+          '/city/trono2.jpg',
+          '/pics/me.jpg',
+          '/skiing/massif.jpg'
+        ];
+        criticalImages.forEach(src => {
+          const img = new Image();
+          img.src = src;
+        });
+      }, 1200);
     }
-  }, [earthLoaded, galaxy2Loaded]);
+  }, [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded]);
 
   // Set typewriter initial delay after loading
   useEffect(() => {
@@ -2125,7 +2228,7 @@ function flyToLandmarkAndOpenModal(section: string) {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      <LoadingScreen isVisible={isLoading} />
+      <LoadingScreen isVisible={isLoading} progress={loadingProgress} />
       
       {/* Header - only show when UI should be visible */}
       {showUI && (
@@ -2309,7 +2412,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                   scale={lm.scale}
                   heightOffset={lm.heightOffset}
                   customRotation={lm.customRotation}
-                  globeRadius={2.2} // Match your Earth scale
+                  globeRadius={2.2} // Match Earth scale
                 />
               ))}
               <Galaxy />
@@ -2321,13 +2424,13 @@ function flyToLandmarkAndOpenModal(section: string) {
               <Planet2 />
               <Planet3 />
               <Planet4 />
-              <Moon />
+              <Moon onLoaded={() => setMoonLoaded(true)} />
               <Rocket />
               <Satellite />
               <UFO />
               <Asteroids />
               <Blackhole />
-              <Goose />
+              <Goose onLoaded={() => setGooseLoaded(true)} />
               {/* Improved lighting for vibrancy and brightness - brightened for earth */}
               <ambientLight intensity={0.82} color="#e0e7ff" />
               <directionalLight position={[18, 28, 18]} intensity={1.7} color="#aee" castShadow />
@@ -2445,7 +2548,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 pb-4 sm:pb-6 md:pb-6 text-center md:pt-0 pt-4">
                     Projects
                   </h2>
-                  <div className="flex-1 overflow-y-scroll max-h-[calc(90vh-160px)] pr-1 projects-scrollbar">
+                  <div className="flex-1 overflow-y-scroll max-h-[calc(90svh-160px)] pr-1 projects-scrollbar">
                     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6 pb-4">
                       <ProjectCard
                         image="/images/preview.png"
