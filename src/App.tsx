@@ -2386,7 +2386,9 @@ function flyToLandmarkAndOpenModal(section: string) {
         >
         <div 
           className={`bg-[rgba(20,20,40,0.7)] border-[3px] mt-[76px] border-indigo-300/70 rounded-2xl p-0 ${
-            activeModal === 'projects' || activeModal === 'hobbies' ? 'md:p-4 max-w-[95vw] lg:max-w-[50vw] md:max-w-[85vw]' : 'md:p-8 max-w-4xl'
+            activeModal === 'projects' ? 'md:p-4 max-w-[95vw] md:max-w-[85vw] lg:max-w-[85vw]' 
+            : activeModal === 'hobbies' ? 'md:p-4 max-w-[95vw] md:max-w-[85vw] lg:max-w-[50vw]' 
+            : 'md:p-8 max-w-4xl'
           } w-full mx-2 relative shadow-lg shadow-indigo-500/30 transition-all duration-500 ${showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}
           style={{ 
             maxHeight: 'calc(100svh - 100px)',
