@@ -2364,8 +2364,7 @@ function flyToLandmarkAndOpenModal(section: string) {
             >
               {/* @ts-ignore: Drei's EffectComposer types */}
               {(
-                (!isMobile && !isLoading) ||
-                (isMobile && showUI)
+                (!isMobile && !isLoading)
               ) && (
                 <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
@@ -2411,11 +2410,12 @@ function flyToLandmarkAndOpenModal(section: string) {
                   globeRadius={2.2} // Match Earth scale
                 />
               ))}
-              <Galaxy />
+              {/* Heavy models - skip on mobile for performance */}
+              {!isMobile && <Galaxy />}
               <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />
-              <Galaxy3 />
-              <Nebula />
-              <Nebula2 />
+              {!isMobile && <Galaxy3 />}
+              {!isMobile && <Nebula />}
+              {!isMobile && <Nebula2 />}
               <Planet1 />
               <Planet2 />
               <Planet3 />
@@ -2425,7 +2425,7 @@ function flyToLandmarkAndOpenModal(section: string) {
               <Satellite />
               <UFO />
               <Asteroids />
-              <Blackhole />
+              {!isMobile && <Blackhole />}
               <Goose onLoaded={() => setGooseLoaded(true)} />
               {/* Improved lighting for vibrancy and brightness - brightened for earth */}
               <ambientLight intensity={0.82} color="#e0e7ff" />
