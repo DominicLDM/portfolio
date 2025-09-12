@@ -2364,7 +2364,8 @@ function flyToLandmarkAndOpenModal(section: string) {
             >
               {/* @ts-ignore: Drei's EffectComposer types */}
               {(
-                (!isMobile && !isLoading)
+                (!isMobile && !isLoading) ||
+                (isMobile && showUI)
               ) && (
                 <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
