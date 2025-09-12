@@ -1903,13 +1903,12 @@ function AboutMe() {
       const startPos = new THREE.Vector3(...cameraPos)
       const endPos = new THREE.Vector3(0, 0, 7)
       const duration = 1.5 // Zoom duration
-      const fps = 60
-      const totalFrames = duration * fps
-      let frame = 0
+      const startTime = performance.now()
       
       const animateCamera = () => {
-        frame++
-        const t = Math.min(frame / totalFrames, 1)
+        const currentTime = performance.now()
+        const elapsed = (currentTime - startTime) / 1000
+        const t = Math.min(elapsed / duration, 1)
         // Easing function
         const alpha = t * t * (3 - 2 * t)
         const newPos = startPos.clone().lerp(endPos, alpha)
@@ -2011,13 +2010,13 @@ function flyToLandmarkAndOpenModal(section: string) {
     startPos = endPos // fallback if camera not available
   }
   const duration = 1.2
-  const fps = 60
-  const totalFrames = duration * fps
-  let frame = 0
+  const startTime = performance.now()
+  
   function smoothstep(x: number): number { return x * x * (3 - 2 * x) }
   function animate() {
-    frame++
-    const linearAlpha = Math.min(1, frame / totalFrames)
+    const currentTime = performance.now()
+    const elapsed = (currentTime - startTime) / 1000
+    const linearAlpha = Math.min(1, elapsed / duration)
     const alpha = smoothstep(linearAlpha)
     const newPos: [number, number, number] = [
       startPos[0] + (endPos[0] - startPos[0]) * alpha,
