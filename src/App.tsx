@@ -2151,53 +2151,29 @@ function flyToLandmarkAndOpenModal(section: string) {
   const [gooseLoaded, setGooseLoaded] = React.useState(false);
   const [loadingProgress, setLoadingProgress] = React.useState(0);
 
-  // Simulated progress with visible increments
-  React.useEffect(() => {
-    if (!isLoading) return;
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 12 + 3; // Increment by 3-15% each time
-      if (progress >= 85) {
-        progress = 85; // Cap at 85% until real loading completes
-        clearInterval(interval);
-      }
-      setLoadingProgress(Math.floor(Math.min(progress, 85))); // Remove decimals
-    }, 150); // Faster updates
-
-    return () => clearInterval(interval);
-  }, [isLoading]);
-
   React.useEffect(() => {
     // Calculate actual loading progress based on loaded models
     const loadedCount = [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded].filter(Boolean).length;
     const actualProgress = Math.round((loadedCount / 4) * 100);
     
+    // Update progress smoothly to the actual progress
+    setLoadingProgress(actualProgress);
+    
     console.log('Loading progress:', { earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded, loadedCount, actualProgress });
 
     if (earthLoaded && galaxy2Loaded && moonLoaded && gooseLoaded) {
-      // Hit 100% at the end
-      setLoadingProgress(prev => {
-        if (prev < 100) {
-          // Animate from current progress to 100%
-          let current = prev;
-          const increment = setInterval(() => {
-            current += 5;
-            if (current >= 100) {
-              current = 100;
-              clearInterval(increment);
-              // Hide loading screen after reaching 100%
-              setTimeout(() => {
-                setIsLoading(false);
-              }, 500);
-            }
-            setLoadingProgress(Math.floor(current)); // Remove decimals
-          }, 50);
-        }
-        return prev;
-      });
-      
-      // Preload critical hobby images in background after main scene loads
+      // All models loaded, complete the loading sequence
+      setLoadingProgress(100);
+      // Hide loading screen after reaching 100%
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    }
+  }, [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded]);
+
+  React.useEffect(() => {
+    // Preload critical hobby images in background after main scene loads
+    if (!isLoading && earthLoaded && galaxy2Loaded && moonLoaded && gooseLoaded) {
       setTimeout(() => {
         const criticalImages = [
           '/images/about me.jpg',
@@ -2212,7 +2188,7 @@ function flyToLandmarkAndOpenModal(section: string) {
         });
       }, 1200);
     }
-  }, [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded]);
+  }, [isLoading, earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded]);
 
   // Set typewriter initial delay after loading
   useEffect(() => {
