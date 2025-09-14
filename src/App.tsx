@@ -2150,30 +2150,44 @@ function flyToLandmarkAndOpenModal(section: string) {
   const [moonLoaded, setMoonLoaded] = React.useState(false);
   const [gooseLoaded, setGooseLoaded] = React.useState(false);
   const [loadingProgress, setLoadingProgress] = React.useState(0);
+  const [skipGalaxy2, setSkipGalaxy2] = React.useState(false);
+
+  // Skip Galaxy2 after 3 seconds if it hasn't loaded
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!galaxy2Loaded) {
+        console.log('Galaxy2 taking too long, skipping...');
+        setSkipGalaxy2(true);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [galaxy2Loaded]);
 
   React.useEffect(() => {
-    // Calculate actual loading progress based on loaded models
-    const loadedCount = [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded].filter(Boolean).length;
+    // Calculate actual loading progress based on loaded models (or skipped ones)
+    const requiredModels = [earthLoaded, galaxy2Loaded || skipGalaxy2, moonLoaded, gooseLoaded];
+    const loadedCount = requiredModels.filter(Boolean).length;
     const actualProgress = Math.round((loadedCount / 4) * 100);
     
     // Update progress smoothly to the actual progress
     setLoadingProgress(actualProgress);
     
-    console.log('Loading progress:', { earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded, loadedCount, actualProgress });
+    console.log('Loading progress:', { earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded, loadedCount, actualProgress });
 
-    if (earthLoaded && galaxy2Loaded && moonLoaded && gooseLoaded) {
-      // All models loaded, complete the loading sequence
+    if (earthLoaded && (galaxy2Loaded || skipGalaxy2) && moonLoaded && gooseLoaded) {
+      // All required models loaded (or skipped), complete the loading sequence
       setLoadingProgress(100);
       // Hide loading screen after reaching 100%
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
     }
-  }, [earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded]);
+  }, [earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded]);
 
   React.useEffect(() => {
     // Preload critical hobby images in background after main scene loads
-    if (!isLoading && earthLoaded && galaxy2Loaded && moonLoaded && gooseLoaded) {
+    if (!isLoading && earthLoaded && (galaxy2Loaded || skipGalaxy2) && moonLoaded && gooseLoaded) {
       setTimeout(() => {
         const criticalImages = [
           '/images/about me.jpg',
@@ -2188,7 +2202,7 @@ function flyToLandmarkAndOpenModal(section: string) {
         });
       }, 1200);
     }
-  }, [isLoading, earthLoaded, galaxy2Loaded, moonLoaded, gooseLoaded]);
+  }, [isLoading, earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded]);
 
   // Set typewriter initial delay after loading
   useEffect(() => {
@@ -2388,7 +2402,7 @@ function flyToLandmarkAndOpenModal(section: string) {
               ))}
               {/* Heavy models - skip on mobile for performance */}
               {!isMobile && <Galaxy />}
-              <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />
+              {!skipGalaxy2 && <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />}
               {!isMobile && <Galaxy3 />}
               {!isMobile && <Nebula />}
               {!isMobile && <Nebula2 />}
