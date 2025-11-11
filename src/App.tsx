@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useRef, useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
 import { Github, ChevronLeft, ChevronRight } from 'lucide-react'
 import { EffectComposer, Vignette, HueSaturation } from '@react-three/postprocessing'
 import { Preload } from '@react-three/drei'
@@ -11,6 +11,119 @@ import * as THREE from 'three'
 import { getSelectionRects } from 'troika-three-text'
 import LowPolyPlanetEarth from './models/LowPolyPlanetEarth'
 
+// Lazy load heavy background models that don't need to be in critical path
+const GalaxyLazy = function Galaxy(props: any) {
+  const { scene } = useGLTF('/models/galaxy.glb')
+  return <primitive object={scene} position={[-60, 20, -90]} scale={[5, 5, 5]} rotation={[12, Math.PI * 0.2, 0]} {...props} />
+}
+
+const Galaxy3Lazy = function Galaxy3(props: any) {
+  const { scene } = useGLTF('/models/galaxy3.glb')
+  return <primitive object={scene} position={[190, 80, -30]} scale={[0.9, 0.9, 0.9]} rotation={[10, Math.PI * 0.2, 15]} {...props} />
+}
+
+const NebulaLazy = function Nebula(props: any) {
+  const { scene } = useGLTF('/models/nebula.glb')
+  return <primitive object={scene} position={[-190, -100, 120]} scale={[1, 1, 1]} rotation={[Math.PI * 0.3, Math.PI * 0.2, Math.PI * 0.3]} {...props} />
+}
+
+const Nebula2Lazy = function Nebula2(props: any) {
+  const { scene } = useGLTF('/models/nebula2.glb')
+  return <primitive object={scene} position={[-190, 400, 520]} scale={[30, 30, 30]} rotation={[Math.PI * 0.3, Math.PI * 0.2, Math.PI * 0.3]} {...props} />
+}
+
+const BlackholeLazy = function Blackhole(props: any) {
+  const { scene } = useGLTF('/models/black_hole.glb')
+  return <primitive object={scene} position={[0, -70, 0]} scale={[2.5, 2.5, 2.5]} rotation={[0, 0, 0]} {...props} />
+}
+
+const AsteroidsLazy = function Asteroids() {
+  const asteroidPositions = useMemo(() => {
+    const arr: Array<{position: [number, number, number], scale: number, rotation: [number, number, number]}> = []
+    let tries = 0
+    while (arr.length < 40 && tries < 400) {
+      const r = 18 + Math.random() * 60
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const x = r * Math.sin(phi) * Math.cos(theta)
+      const y = r * Math.sin(phi) * Math.sin(theta)
+      const z = r * Math.cos(phi)
+      const dist = Math.sqrt(x * x + y * y + z * z)
+      if (dist > 14) {
+        arr.push({
+          position: [x, y, z],
+          scale: Math.random() * 0.35 + 0.08,
+          rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
+        })
+      }
+      tries++
+    }
+    return arr
+  }, [])
+
+  return (
+    <group>
+      {asteroidPositions.map((a, i) => (
+        <mesh key={i} position={a.position} scale={a.scale} rotation={a.rotation}>
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial color="#888" roughness={1} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+// Decorative models
+const Planet1Lazy = function Planet1(props: any) {
+  const { scene } = useGLTF('/models/planet1.glb')
+  return <primitive object={scene} position={[60, -10, -130]} scale={[1.5, 1.5, 1.5]} rotation={[0, Math.PI * 0.3, 0]} {...props} />
+}
+
+const Planet2Lazy = function Planet2(props: any) {
+  const { scene } = useGLTF('/models/planet2.glb')
+  return <primitive object={scene} position={[-60, -10, 150]} scale={[1.2, 1.2, 1.2]} rotation={[Math.PI * 0.2, Math.PI * 0.5, 0]} {...props} />
+}
+
+const Planet3Lazy = function Planet3(props: any) {
+  const { scene } = useGLTF('/models/planet3.glb')
+  return <primitive object={scene} position={[150, -50, 20]} scale={[1.2, 1.2, 1.2]} rotation={[Math.PI * 0.1, Math.PI * 0.7, Math.PI * 0.2]} {...props} />
+}
+
+const Planet4Lazy = function Planet4(props: any) {
+  const { scene } = useGLTF('/models/planet4.glb')
+  return <primitive object={scene} position={[-160, 15, 20]} scale={[0.1, 0.1, 0.1]} rotation={[Math.PI * 0.4, Math.PI * 0.2, Math.PI * 0.3]} {...props} />
+}
+
+const RocketLazy = function Rocket(props: any) {
+  const { scene } = useGLTF('/models/rocket.glb')
+  return <primitive object={scene} position={[-40, 50, 40]} scale={[0.08, 0.08, 0.08]} rotation={[12, Math.PI * 1.2, 0]} {...props} />
+}
+
+const SatelliteLazy = function Satellite(props: any) {
+  const { scene } = useGLTF('/models/satellite.glb')
+  return <primitive object={scene} position={[60, 80, -75]} scale={[0.2, 0.2, 0.2]} rotation={[0, Math.PI * 1.2, 0]} {...props} />
+}
+
+const UFOLazy = function UFO(props: any) {
+  const { scene } = useGLTF('/models/ufo.glb')
+  return <primitive object={scene} position={[5, -30, -80]} scale={[0.01, 0.01, 0.01]} rotation={[0, Math.PI * 0.5, 0]} {...props} />
+}
+
+// Wrap in lazy for code splitting
+const Galaxy = lazy(() => Promise.resolve({ default: GalaxyLazy }))
+const Galaxy3 = lazy(() => Promise.resolve({ default: Galaxy3Lazy }))
+const Nebula = lazy(() => Promise.resolve({ default: NebulaLazy }))
+const Nebula2 = lazy(() => Promise.resolve({ default: Nebula2Lazy }))
+const Blackhole = lazy(() => Promise.resolve({ default: BlackholeLazy }))
+const Asteroids = lazy(() => Promise.resolve({ default: AsteroidsLazy }))
+const Planet1 = lazy(() => Promise.resolve({ default: Planet1Lazy }))
+const Planet2 = lazy(() => Promise.resolve({ default: Planet2Lazy }))
+const Planet3 = lazy(() => Promise.resolve({ default: Planet3Lazy }))
+const Planet4 = lazy(() => Promise.resolve({ default: Planet4Lazy }))
+const Rocket = lazy(() => Promise.resolve({ default: RocketLazy }))
+const Satellite = lazy(() => Promise.resolve({ default: SatelliteLazy }))
+const UFO = lazy(() => Promise.resolve({ default: UFOLazy }))
+
 // Utility functions for coordinate conversion
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -19,20 +132,6 @@ declare global {
     __typewriterInitialDelay?: number;
   }
 }
-
-const useImagePreloader = (imageUrls: string[]) => {
-  const preloadImages = useCallback(() => {
-    if (imageUrls.length === 0) return;
-    
-    // Preload all images
-    imageUrls.forEach((url) => {
-      const img = new Image();
-      img.src = url; // Set src, no callbacks
-    });
-  }, [imageUrls]);
-
-  return { preloadImages };
-};
 
 // Hobby data types
 type HobbyKey = 'music' | 'theatre' | 'photos' | 'cities' | 'gaming' | 'skiing';
@@ -46,13 +145,13 @@ type HobbyInfo = {
 const hobbyData: Record<HobbyKey, HobbyInfo> = {
   music: {
     title: 'Music',
-    images: ['/music/phoneboy.jpg', '/music/boyphone.jpg', '/music/rob.jpg', '/music/valley.jpg', '/music/wrecks.jpg', '/music/goodkid.jpg', '/music/bwu.jpg', '/music/hey.jpg', '/music/alec.jpg'],
+    images: ['/music/top.webp', '/music/phoneboy.webp', '/music/camino.webp', '/music/boyphone.webp', '/music/rob.webp', '/music/color.webp', '/music/valley.webp', '/music/wrecks.webp', '/music/goodkid.webp', '/music/sunday.webp', '/music/bwu.webp', '/music/hey.webp', '/music/alec.webp'],
     description: "Check out my playlist or the concerts I've been to!",
-    imageDescriptions: ['Phoneboy Heartbreak Designer in Toronto!', 'W', 'I saw a band called Valley <3', 'SE concert!!', 'The Wrecks in Montreal', 'Good Kid!!', 'BoyWithUke without the mask', 'Hey, Nothing', "Alec Benjamin"],
+    imageDescriptions: ['Spontaneous Twenty One Pilots in Toronto ^-^','Phoneboy Heartbreak Designer in Toronto!', 'The Band Camino', 'W', 'I saw a band called Valley <3', 'In color in colour', 'SE concert!!', 'The Wrecks in Montreal', 'Good Kid!!', 'Almost Monday', 'BoyWithUke without the mask', 'Hey, Nothing', "Alec Benjamin"],
   },
   theatre: {
     title: 'Theatre',
-    images: ['/bway/playbillwall.jpg', '/bway/hadestown2.jpg', '/bway/parade.jpg', '/bway/kimberly.jpg', '/bway/sweeney.jpg', '/bway/gaten.jpg', '/bway/strange loop.jpg', '/bway/comefromaway.jpg', '/bway/hadestown1.jpg', '/bway/mormon.jpg', '/bway/beetlejuice.jpg', '/bway/signedhadestown.jpg', '/bway/signedkim.jpg'],
+    images: ['/bway/playbillwall.webp', '/bway/hadestown2.webp', '/bway/parade.webp', '/bway/kimberly.webp', '/bway/sweeney.webp', '/bway/gaten.webp', '/bway/strange loop.webp', '/bway/comefromaway.webp', '/bway/hadestown1.webp', '/bway/mormon.webp', '/bway/beetlejuice.webp', '/bway/signedhadestown.webp', '/bway/signedkim.webp'],
     description: "I LOVE musical theatre! I've seen 9 shows on Broadway, and the magic never fades!",
     imageDescriptions: [
       'My Playbill wall!! My favs are Hadestown, Fun Home, and Amélie!',
@@ -73,7 +172,7 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   },
   photos: {
     title: 'Cool photos!',
-    images: ['/pics/enoshima.jpg', '/pics/fuji.jpg', '/pics/arctic.jpg', '/pics/spike.jpg', '/pics/aurora.jpg', '/pics/swan.jpg', '/pics/shrine.jpg', '/pics/poutine.jpg', '/pics/island.jpg', '/pics/chow.jpg', '/pics/bamboo.jpg', '/pics/dp.jpg', '/pics/train.jpg', '/pics/tree.jpg', '/pics/goat.jpg', '/pics/nice.jpg', '/pics/lights.jpg', '/pics/speaker.jpg', '/pics/water.jpg', '/pics/turtle.jpg', '/pics/coolio.jpg', '/pics/night.jpg', '/pics/vibes.jpg', '/pics/taleng.jpg', '/pics/robot.jpg', '/pics/slush.jpg', '/pics/wall.png', '/pics/tower.jpg', '/pics/tori.jpg', '/pics/peace.jpg', '/pics/stairs.jpg', '/pics/me.jpg', '/pics/cool.jpg', '/pics/ice.jpg'],
+    images: ['/pics/enoshima.webp', '/pics/fuji.webp', '/pics/arctic.webp', '/pics/spike.webp', '/pics/aurora.webp', '/pics/swan.webp', '/pics/shrine.webp', '/pics/poutine.webp', '/pics/island.webp', '/pics/lighthouse.webp', '/pics/chow.webp', '/pics/bamboo.webp', '/pics/dp.webp', '/pics/train.webp', '/pics/tree.webp', '/pics/goat.webp', '/pics/nice.webp', '/pics/lights.webp', '/pics/speaker.webp', '/pics/water.webp', '/pics/turtle.webp', '/pics/coolio.webp', '/pics/night.webp', '/pics/vibes.webp', '/pics/taleng.webp', '/pics/robot.webp', '/pics/dartmouth.webp', '/pics/slush.webp', '/pics/wall.webp', '/pics/tower.webp', '/pics/tori.webp', '/pics/peace.webp', '/pics/stairs.webp', '/pics/me.webp', '/pics/cool.webp', '/pics/ice.webp'],
     description: 'Fun memories and nice photos I\'ve taken over the years :)',
     imageDescriptions: [
       'Japanese sunset over Enoshima and Fuji',
@@ -85,6 +184,7 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
       'So green',
       'POUTINE POUTINE POUTINE',
       'Pretty Japanese coastline',
+      'Halifax lighthouse!',
       'Olivia Chow!',
       'Bamboo',
       'My fav building on campus',
@@ -101,6 +201,7 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
       'Lake Fujikawaguchi',
       'Taleng',
       'FRC',
+      'Dartmouth nighttime',
       'SLUSHIES!',
       'O-week',
       'Tokyo Tower',
@@ -116,7 +217,7 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   },
   cities: {
     title: 'Cities',
-    images: ['/city/trono2.jpg', '/city/shibuya.jpg', '/city/mtl.jpg', '/city/edge.jpg', '/city/neon.jpg', '/city/one.jpg', '/city/shibuya2.jpg', '/city/swan.jpg', '/city/wtc.jpg', '/city/skytree.jpg', '/city/rain.jpg', '/city/large.jpg', '/city/glow.jpg', '/city/azubadai.jpg', '/city/endless.jpg', '/city/happy.jpg', '/city/harajuku.jpg', '/city/moon.jpg', '/city/oly.jpg', '/city/rock.jpg', '/city/yourname.jpg', '/city/trono.jpg', '/city/tall.jpg', '/city/nuns.jpg', '/city/doof.jpg', '/city/ike.jpg', '/city/market.jpg', '/city/rain2.jpg', '/city/rain3.jpg', '/city/rain4.jpg', '/city/shinjuku.jpg', '/city/square.jpg'],
+    images: ['/city/trono2.webp', '/city/shibuya.webp', '/city/mtl.webp', '/city/edge.webp', '/city/neon.webp', '/city/one.webp', '/city/shibuya2.webp', '/city/swan.webp', '/city/wtc.webp', '/city/skytree.webp', '/city/rain.webp', '/city/large.webp', '/city/glow.webp', '/city/azubadai.webp', '/city/endless.webp', '/city/happy.webp', '/city/harajuku.webp', '/city/moon.webp', '/city/oly.webp', '/city/rock.webp', '/city/yourname.webp', '/city/trono.webp', '/city/tall.webp', '/city/nuns.webp', '/city/doof.webp', '/city/ike.webp', '/city/market.webp', '/city/rain2.webp', '/city/rain3.webp', '/city/rain4.webp', '/city/shinjuku.webp', '/city/square.webp', '/city/citadel.webp', '/city/hali.webp'],
     description: 'I\'m super into skylines, transit, and everything in between.',
     imageDescriptions: [
       'Toronto skyline is perfection',
@@ -150,14 +251,16 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
       'more rain',
       'can you tell I like rainy nights',
       'shinjuku',
-      'scramble'
+      'scramble',
+      'halifax clock',
+      'atlantic ocean!!'
 
       
     ]
   },
   gaming: {
     title: 'Esports',
-    images: ['/esports/fnatic.jpg', '/esports/toronto.jpg', '/esports/optic.jpg', '/esports/stage.jpg', '/esports/trophy.jpg', '/esports/benja.jpg', '/esports/shaiiko.jpg', '/esports/noaura.jpg', '/esports/w7m.jpg'],
+    images: ['/esports/fnatic.webp', '/esports/toronto.webp', '/esports/optic.webp', '/esports/stage.webp', '/esports/trophy.webp', '/esports/benja.webp', '/esports/shaiiko.webp', '/esports/noaura.webp', '/esports/w7m.webp'],
     description: "Whether it's watching or playing, I'm a huge fan of competitive gaming.",
     imageDescriptions: [
       'Watching Fnatic at VCT Masters Toronto!',
@@ -173,7 +276,7 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   },
   skiing: {
     title: 'Skiing',
-    images: ['/skiing/omg.jpg', '/skiing/omd.jpg', '/skiing/pezants.jpg', '/skiing/trio.jpg', '/skiing/insane.jpg', '/skiing/massif.jpg', '/skiing/msa.jpg', '/skiing/sleepy.jpg', '/skiing/nice.jpg', '/skiing/river.jpg'],
+    images: ['/skiing/omg.webp', '/skiing/omd.webp', '/skiing/pezants.webp', '/skiing/trio.webp', '/skiing/insane.webp', '/skiing/massif.webp', '/skiing/msa.webp', '/skiing/sleepy.webp', '/skiing/nice.webp', '/skiing/river.webp'],
     description: 'Fun fact: I\'ve skied since I was 2 years old!',
     imageDescriptions: [
       'Le Massif, the best day I\'ve ever skied',
@@ -205,25 +308,25 @@ function MobileImageGallery({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use preloader hook
-  const { preloadImages } = useImagePreloader(images);
-
-  // Preload images on mount
+  // Only preload current and adjacent images
   useEffect(() => {
-    preloadImages();
-  }, [preloadImages]);
-
-  // Preload adjacent images
-  useEffect(() => {
-    if (images.length <= 1) return;
+    if (images.length === 0) return;
     
-    const nextIndex = (currentIndex + 1) % images.length;
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
+    // Preload current image
+    const current = new Image();
+    current.src = images[currentIndex];
     
-    [nextIndex, prevIndex].forEach(index => {
-      const img = new Image();
-      img.src = images[index];
-    });
+    // Preload adjacent images for smooth transitions
+    if (images.length > 1) {
+      const nextIndex = (currentIndex + 1) % images.length;
+      const prevIndex = (currentIndex - 1 + images.length) % images.length;
+      
+      const next = new Image();
+      next.src = images[nextIndex];
+      
+      const prev = new Image();
+      prev.src = images[prevIndex];
+    }
   }, [currentIndex, images]);
 
   const nextImage = () => {
@@ -293,6 +396,8 @@ function MobileImageGallery({
             <img
               src={images[currentIndex]}
               alt={`${title} - ${descriptions[currentIndex] || "Image"}`}
+              loading="lazy"
+              decoding="async"
               className={`w-full h-full object-contain transition-all duration-300 ${
                 isTransitioning 
                   ? "opacity-0 scale-105" 
@@ -343,23 +448,20 @@ function DesktopImageGallery({
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use preloader hook
-  const { preloadImages } = useImagePreloader(images);
-
-  // Preload images on mount
+  // Only preload current and adjacent images
   useEffect(() => {
-    preloadImages();
-  }, [preloadImages]);
-
-  // Preload adjacent images
-  useEffect(() => {
-    if (images.length <= 1) return;
+    if (images.length === 0) return;
     
-    // Silently preload next and previous images
-    const nextIndex = (currentIndex + 1) % images.length;
-    const prevIndex = (currentIndex - 1 + images.length) % images.length;
+    // Preload current and adjacent images only
+    const indicesToLoad = [currentIndex];
+    if (images.length > 1) {
+      indicesToLoad.push(
+        (currentIndex + 1) % images.length,
+        (currentIndex - 1 + images.length) % images.length
+      );
+    }
     
-    [nextIndex, prevIndex].forEach(index => {
+    indicesToLoad.forEach(index => {
       const img = new Image();
       img.src = images[index];
     });
@@ -502,6 +604,8 @@ function DesktopImageGallery({
           <img
             src={images[currentIndex]}
             alt={`${title} - ${descriptions[currentIndex] || 'Image'}`}
+            loading="lazy"
+            decoding="async"
             className={`w-full h-full object-contain transition-all duration-400 ease-in-out ${
               isTransitioning 
                 ? 'opacity-0 scale-105' 
@@ -1368,19 +1472,7 @@ function Goose(props: any) {
   )
 }
 
-// Galaxy models
-function Blackhole(props: any) {
-  const { scene } = useGLTF('/models/black_hole.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[0, -70, 0]}
-      scale={[2.5, 2.5, 2.5]}
-      rotation={[0, 0, 0]}
-      {...props}
-    />
-  )
-}
+// Galaxy models (Galaxy2 is kept for loading tracking)
 
 function Galaxy2(props: any) {
   const { scene } = useGLTF('/models/galaxy2.glb')
@@ -1403,109 +1495,7 @@ function Galaxy2(props: any) {
   )
 }
 
-function Galaxy(props: any) {
-  const { scene } = useGLTF('/models/galaxy.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[-60, 20, -90]}
-      scale={[5, 5, 5]}
-      rotation={[12, Math.PI * 0.2, 0]}
-      {...props}
-    />
-  )
-}
-
-function Galaxy3(props: any) {
-  const { scene } = useGLTF('/models/galaxy3.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[190, 80, -30]}
-      scale={[0.9, 0.9, 0.9]}
-      rotation={[10, Math.PI * 0.2, 15]}
-      {...props}
-    />
-  )
-}
-
-function Nebula(props: any) {
-  const { scene } = useGLTF('/models/nebula.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[-190, -100, 120]}
-      scale={[1, 1, 1]}
-      rotation={[Math.PI * 0.3, Math.PI * 0.2, Math.PI * 0.3]}
-      {...props}
-    />
-  )
-}
-
-function Nebula2(props: any) {
-  const { scene } = useGLTF('/models/nebula2.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[-190, 400, 520]} // moved far away from other objects
-      scale={[30, 30, 30]}
-      rotation={[Math.PI * 0.3, Math.PI * 0.2, Math.PI * 0.3]}
-      {...props}
-    />
-  )
-}
-
-function Planet1(props: any) {
-  const { scene } = useGLTF('/models/planet1.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[60, -10, -130]}
-      scale={[1.5, 1.5, 1.5]}
-      rotation={[0, Math.PI * 0.3, 0]}
-      {...props}
-    />
-  )
-}
-
-function Planet2(props: any) {
-  const { scene } = useGLTF('/models/planet2.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[-60, -10, 150]}
-      scale={[1.2, 1.2, 1.2]}
-      rotation={[Math.PI * 0.2, Math.PI * 0.5, 0]}
-      {...props}
-    />
-  )
-}
-
-function Planet3(props: any) {
-  const { scene } = useGLTF('/models/planet3.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[150, -50, 20]}
-      scale={[1.2, 1.2, 1.2]}
-      rotation={[Math.PI * 0.1, Math.PI * 0.7, Math.PI * 0.2]}
-      {...props}
-    />
-  )
-}
-
-function Planet4(props: any) {
-  const { scene } = useGLTF('/models/planet4.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[-160, 15, 20]}
-      scale={[0.1, 0.1, 0.1]}
-      rotation={[Math.PI * 0.4, Math.PI * 0.2, Math.PI * 0.3]}
-      {...props}
-    />
-  )
-}
+// Heavy background models and decorative models now lazy-loaded at top of file
 
 function Moon(props: any) {
   const { scene } = useGLTF('/models/moon.glb')
@@ -1528,95 +1518,10 @@ function Moon(props: any) {
   )
 }
 
-function Rocket(props: any) {
-  const { scene } = useGLTF('/models/rocket.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[-40, 50, 40]}
-      scale={[0.08, 0.08, 0.08]}
-      rotation={[12, Math.PI * 1.2, 0]}
-      {...props}
-    />
-  )
-}
-
-function Satellite(props: any) {
-  const { scene } = useGLTF('/models/satellite.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[60, 80, -75]}
-      scale={[0.2, 0.2, 0.2]}
-      rotation={[0, Math.PI * 1.2, 0]}
-      {...props}
-    />
-  )
-}
-
-function UFO(props: any) {
-  const { scene } = useGLTF('/models/ufo.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[5, -30, -80]}
-      scale={[0.01, 0.01, 0.01]}
-      rotation={[0, Math.PI * 0.5, 0]}
-      {...props}
-    />
-  )
-}
+// Rocket, Satellite, UFO now lazy-loaded at top of file
 
 // Minimal Asteroids
-function Asteroids() {
-  type Asteroid = {
-    position: [number, number, number]
-    scale: number
-    rotation: [number, number, number]
-  }
-  const asteroids = useMemo(() => {
-    const arr: Asteroid[] = []
-    let tries = 0
-    while (arr.length < 40 && tries < 400) {
-      const r = 18 + Math.random() * 60
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const x = r * Math.sin(phi) * Math.cos(theta)
-      const y = r * Math.sin(phi) * Math.sin(theta)
-      const z = r * Math.cos(phi)
-      const dist = Math.sqrt(x * x + y * y + z * z)
-      if (dist > 14) {
-        arr.push({
-          position: [x, y, z],
-          scale: Math.random() * 0.35 + 0.08,
-          rotation: [
-            Math.random() * Math.PI,
-            Math.random() * Math.PI,
-            Math.random() * Math.PI,
-          ],
-        })
-      }
-      tries++
-    }
-    return arr
-  }, [])
-  
-  return (
-    <group>
-      {asteroids.map((a, i) => (
-        <mesh
-          key={i}
-          position={a.position}
-          scale={a.scale}
-          rotation={a.rotation}
-        >
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#888" roughness={1} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
+// Asteroids now lazy-loaded at top of file
 
 function StarsPoints({ count = 1200 }) {
   const stars = useMemo(() => {
@@ -1759,7 +1664,13 @@ function ProjectCard({ image, name, tech, description, links }: {
   return (
     <div className="bg-purple-700/25 border-2 border-pink-300/60 rounded-2xl p-0 hover:border-pink-300/80 hover:bg-purple-700/35 transition-all duration-300 group shadow-lg flex flex-col w-full md:bg-purple-800/20 md:border-2 md:border-purple-400/40 md:hover:border-pink-300/60 md:hover:bg-purple-700/25">
       <div className="w-full aspect-[16/9] overflow-hidden rounded-t-2xl">
-        <img src={image} alt={name} className="w-full h-full object-cover rounded-t-2xl border-b-4 border-indigo-300/60 shadow-md" />
+        <img 
+          src={image} 
+          alt={name} 
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover rounded-t-2xl border-b-4 border-indigo-300/60 shadow-md" 
+        />
       </div>
       <div className="flex-1 flex flex-col justify-between h-full p-6">
         <div>
@@ -1806,8 +1717,10 @@ function AboutMe() {
         {/* Image - shows on top for mobile, left side for desktop */}
         <div className="flex justify-center items-center w-full sm:w-1/2 xl:w-1/2 min-h-[160px] sm:min-h-[260px] order-1 sm:order-1 px-0 mt-2 sm:mt-0">
           <img
-            src="/images/about me.jpg"
+            src="/images/about me.webp"
             alt="Dominic Lemoine de Martigny"
+            loading="lazy"
+            decoding="async"
             className="w-full h-auto rounded-2xl object-contain shadow-[0_6px_32px_0_rgba(126,139,245,0.18)] bg-transparent"
             style={{ maxHeight: '320px', maxWidth: '100%' }}
           />
@@ -2190,11 +2103,11 @@ function flyToLandmarkAndOpenModal(section: string) {
     if (!isLoading && earthLoaded && (galaxy2Loaded || skipGalaxy2) && moonLoaded && gooseLoaded) {
       setTimeout(() => {
         const criticalImages = [
-          '/images/about me.jpg',
-          '/music/phoneboy.jpg',
-          '/city/trono2.jpg',
-          '/pics/me.jpg',
-          '/skiing/massif.jpg'
+          '/images/about me.webp',
+          '/music/phoneboy.webp',
+          '/city/trono2.webp',
+          '/pics/enoshima.webp',
+          '/skiing/massif.webp'
         ];
         criticalImages.forEach(src => {
           const img = new Image();
@@ -2356,7 +2269,10 @@ function flyToLandmarkAndOpenModal(section: string) {
                 (!isMobile && !isLoading) ||
                 (isMobile && showUI)
               ) && (
-                <EffectComposer enableNormalPass={false} resolutionScale={0.7}>
+                <EffectComposer 
+                  enableNormalPass={false} 
+                  resolutionScale={0.7}
+                >
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
                   <HueSaturation hue={0.0} saturation={0.1} />
                 </EffectComposer>
@@ -2400,23 +2316,37 @@ function flyToLandmarkAndOpenModal(section: string) {
                   globeRadius={2.2} // Match Earth scale
                 />
               ))}
-              {/* Heavy models - skip on mobile for performance */}
-              {!isMobile && <Galaxy />}
+              {/* Critical models for loading screen */}
               {!skipGalaxy2 && <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />}
-              {!isMobile && <Galaxy3 />}
-              {!isMobile && <Nebula />}
-              {!isMobile && <Nebula2 />}
+              <Moon onLoaded={() => setMoonLoaded(true)} />
+              <Goose onLoaded={() => setGooseLoaded(true)} />
+              
+              {/* Important scene elements - always load, don't lazy load */}
+              {!isMobile && <Galaxy />}
               <Planet1 />
               <Planet2 />
               <Planet3 />
               <Planet4 />
-              <Moon onLoaded={() => setMoonLoaded(true)} />
-              <Rocket />
-              <Satellite />
               <UFO />
               <Asteroids />
-              {!isMobile && <Blackhole />}
-              <Goose onLoaded={() => setGooseLoaded(true)} />
+              
+              {/* Heavy background models - lazy load after critical path */}
+              {!isMobile && !isLoading && (
+                <Suspense fallback={null}>
+                  <Galaxy3 />
+                  <Nebula />
+                  <Nebula2 />
+                  <Blackhole />
+                </Suspense>
+              )}
+              
+              {/* Decorative models - load after main scene */}
+              {!isLoading && (
+                <Suspense fallback={null}>
+                  <Rocket />
+                  <Satellite />
+                </Suspense>
+              )}
               {/* Improved lighting for vibrancy and brightness - brightened for earth */}
               <ambientLight intensity={0.82} color="#e0e7ff" />
               <directionalLight position={[18, 28, 18]} intensity={1.7} color="#aee" castShadow />
@@ -2493,7 +2423,7 @@ function flyToLandmarkAndOpenModal(section: string) {
               <X size={24} />
             </button>
 
-            <div className={`transition-all duration-700 delay-100 ${showModal ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}> 
+            <div className={`transition-all duration-700 delay-100 flex-1 flex flex-col overflow-hidden ${showModal ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}> 
               {activeModal === "about" && (
                 <AboutMe />
               )}
@@ -2506,22 +2436,61 @@ function flyToLandmarkAndOpenModal(section: string) {
             </div>
 
               {activeModal === "experience" && (
-                <div className="px-4 sm:px-8 md:px-12 lg:px-20 max-w-6xl sm:pt-2 w-full h-full overflow-y-auto">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl pt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4 sm:mb-6 md:mb-8 text-center sm:text-left">
+                <div className="px-6 sm:px-10 md:px-16 lg:px-20 max-w-5xl w-full flex-1 flex flex-col min-h-0">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl pt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4 sm:mb-6 text-center sm:text-left flex-shrink-0">
                     Experience
                   </h2>
-                  <div className="flex flex-col gap-6 sm:gap-8 md:gap-10 items-stretch">
-                    <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 hover:border-pink-300/60 transition-all duration-300 group">
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Engineer Intern</h3>
-                      <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">ALS Geoanalytics • May 2025 - Aug 2025</p>
-                      <p className="leading-relaxed text-white/90 text-sm sm:text-base">
+                  <div className="flex flex-col gap-5 sm:gap-6 items-stretch pb-6 overflow-y-auto flex-1 pr-1 projects-scrollbar">
+                    {/* Experience Entry */}
+                    <div className="border-l-4 border-purple-400/60 pl-5 sm:pl-6 pr-4 py-3 hover:border-pink-300/60 transition-all duration-300 group">
+                      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">
+                          Incoming Software Engineer Intern
+                        </h3>
+                        <p className="text-purple-300/80 text-xs sm:text-sm font-medium whitespace-nowrap mt-0.5 sm:mt-0">
+                          Jan 2026 - Apr 2026
+                        </p>
+                      </div>
+                      <p className="text-purple-300/90 text-sm sm:text-base font-medium mb-2">
+                        Versaterm
+                      </p>
+                      <p className="leading-relaxed text-white/85 text-xs sm:text-sm">
+                        Incoming Winter 2026! Building software for public safety agencies using Java, Spring Boot, C#, and ASP.NET.
+                      </p>
+                    </div>
+
+                    {/* Experience Entry */}
+                    <div className="border-l-4 border-purple-400/60 pl-5 sm:pl-6 pr-4 py-3 hover:border-pink-300/60 transition-all duration-300 group">
+                      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">
+                          Software Engineer Intern
+                        </h3>
+                        <p className="text-purple-300/80 text-xs sm:text-sm font-medium whitespace-nowrap mt-0.5 sm:mt-0">
+                          May 2025 - Aug 2025
+                        </p>
+                      </div>
+                      <p className="text-purple-300/90 text-sm sm:text-base font-medium mb-2">
+                        ALS Geoanalytics
+                      </p>
+                      <p className="leading-relaxed text-white/85 text-xs sm:text-sm">
                         Built a fullstack geoanalytics platform with AI-driven data processing, cloud-native architecture, and real-time dashboards, streamlining geoscience document analysis and cutting data labeling time from minutes to seconds.
                       </p>
                     </div>
-                    <div className="border-l-4 border-purple-400/60 pr-4 pl-6 sm:pl-8 py-4 sm:py-6 mb-6 hover:border-pink-300/60 transition-all duration-300 group">
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300 mb-2">Software Developer</h3>
-                      <p className="text-purple-300/90 text-sm sm:text-base md:text-lg mb-3 font-medium">GCE Global • Jun 2024 - Aug 2024</p>
-                      <p className="leading-relaxed text-white/90 text-sm sm:text-base">
+
+                    {/* Experience Entry */}
+                    <div className="border-l-4 border-purple-400/60 pl-5 sm:pl-6 pr-4 py-3 hover:border-pink-300/60 transition-all duration-300 group">
+                      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">
+                          Software Developer
+                        </h3>
+                        <p className="text-purple-300/80 text-xs sm:text-sm font-medium whitespace-nowrap mt-0.5 sm:mt-0">
+                          Jun 2024 - Aug 2024
+                        </p>
+                      </div>
+                      <p className="text-purple-300/90 text-sm sm:text-base font-medium mb-2">
+                        GCE Global
+                      </p>
+                      <p className="leading-relaxed text-white/85 text-xs sm:text-sm">
                         Modernized a legacy website and built AI-powered tools to streamline legal research and document analysis.
                       </p>
                     </div>
@@ -2537,7 +2506,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                   <div className="flex-1 overflow-y-scroll max-h-[calc(90svh-160px)] pr-1 projects-scrollbar">
                     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6 pb-4">
                       <ProjectCard
-                        image="/images/preview.png"
+                        image="/images/preview.webp"
                         name="uwGuessr"
                         tech={["Typescript", "Next.js", "GraphQL", "Supabase", "AWS", "Mapbox", "Auth0"]}
                         description="Waterloo's very own Geoguessr! uwGuessr is a geoguessing game with over 60,000 visits and 5,000 users. The platform features a real-time daily leaderboard, user-submitted image challenges, and robust security to ensure fair play."
@@ -2547,7 +2516,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         ]}
                       />
                       <ProjectCard
-                        image="/images/globefolio.png"
+                        image="/images/globefolio.webp"
                         name="Globefolio"
                         tech={["React + Vite", "Three.js", "Typescript", "Tailwind"]}
                         description="My personal globefolio!"
@@ -2557,7 +2526,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         ]}
                       />
                       <ProjectCard
-                        image="/images/glasses.jpg"
+                        image="/images/glasses.webp"
                         name="GLASSES"
                         tech={["Python", "Flask", "React Native ", "Javascript", "Raspberry Pi"]}
                         description="The Graphical Light Assisted Sound Sensor Eyewear System (GLASSES) is a wearable pair of glasses with built in song recognition and lyric display. Made in collaboration with Nathan L, Nur I, Peizhe G, Kiersten E, and Jennifer Y!"
@@ -2566,7 +2535,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         ]}
                       />
                       <ProjectCard
-                        image="/images/RemberU.png"
+                        image="/images/RemberU.webp"
                         name="RememberU"
                         tech={["Flutter", "Firebase", "Python", "Flask", "OpenCV", "Gemini", "Raspberry Pi"]}
                         description="RememberU is a wearable AI device designed to help users recall conversations at busy networking events. By combining lip-reading, facial recognition, and Gemini AI, it delivers real-time, context-aware summaries directly to your mobile app. "
@@ -2576,7 +2545,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         ]}
                       />
                       <ProjectCard
-                        image="/images/V3-Project.png"
+                        image="/images/V3-Project.webp"
                         name="V3"
                         tech={["Python", "Matplotlib", "Tkinter"]}
                         description="Tanner Slutsken and I developed V³, a physics simulator designed to help students learn physics fundamentals. The project won first place in Engineering & Computer Science and placed fourth overall at our school's science fair!"
@@ -2585,7 +2554,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         ]}
                       />
                       <ProjectCard
-                        image="/images/Worldle-Project.png"
+                        image="/images/Worldle-Project.webp"
                         name="Worldle"
                         tech={["Python", "Matplotlib", "Tkinter"]}
                         description="My version of Worldle, a geography-themed wordle game by Teuteuf. Made for my Secondary 4 computer science class (and to practice my own geography knowledge)."
