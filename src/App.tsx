@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react'
 import { Github, ChevronLeft, ChevronRight } from 'lucide-react'
 import { EffectComposer, Vignette, HueSaturation } from '@react-three/postprocessing'
-import { Preload } from '@react-three/drei'
+import { Preload, AdaptiveDpr, AdaptiveEvents } from '@react-three/drei'
 import { useGLTF } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Text, OrbitControls, Stars } from '@react-three/drei'
@@ -2400,13 +2400,10 @@ function flyToLandmarkAndOpenModal(section: string) {
               style={{ background: 'transparent' }}
             >
               {/* @ts-ignore: Drei's EffectComposer types */}
-              {(
-                (!isMobile && !isLoading) ||
-                (isMobile && showUI)
-              ) && (
+              {!isMobile && !isLoading && (
                 <EffectComposer 
                   enableNormalPass={false} 
-                  resolutionScale={0.7}
+                  resolutionScale={0.5}
                 >
                   <Vignette eskil={false} offset={0.18} darkness={0.38} />
                   <HueSaturation hue={0.0} saturation={0.1} />
@@ -2522,6 +2519,9 @@ function flyToLandmarkAndOpenModal(section: string) {
                   onEnd={handleInteractionEnd}
                 />
               )}
+              {/* Dynamic performance adjustment */}
+              <AdaptiveDpr pixelated />
+              <AdaptiveEvents />
               {/* Drei Preload for materials/textures */}
               <Preload all />
             </Canvas>
