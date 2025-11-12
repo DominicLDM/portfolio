@@ -2063,7 +2063,7 @@ function flyToLandmarkAndOpenModal(section: string) {
   const [moonLoaded, setMoonLoaded] = React.useState(false);
   const [gooseLoaded, setGooseLoaded] = React.useState(false);
   const [loadingProgress, setLoadingProgress] = React.useState(0);
-  const [skipGalaxy2, setSkipGalaxy2] = React.useState(false);
+  const [skipGalaxy2, setSkipGalaxy2] = React.useState(isMobile); // Skip immediately on mobile
 
   // Skip Galaxy2 after 3 seconds if it hasn't loaded
   React.useEffect(() => {
@@ -2317,7 +2317,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                 />
               ))}
               {/* Critical models for loading screen */}
-              {!skipGalaxy2 && <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />}
+              {!skipGalaxy2 && !isMobile && <Galaxy2 onLoaded={() => setGalaxy2Loaded(true)} />}
               <Moon onLoaded={() => setMoonLoaded(true)} />
               <Goose onLoaded={() => setGooseLoaded(true)} />
               
@@ -2344,7 +2344,7 @@ function flyToLandmarkAndOpenModal(section: string) {
               {!isLoading && (
                 <Suspense fallback={null}>
                   <Rocket />
-                  <Satellite />
+                  {!isMobile && <Satellite />}
                 </Suspense>
               )}
               {/* Improved lighting for vibrancy and brightness - brightened for earth */}
