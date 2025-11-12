@@ -61,13 +61,22 @@ const AsteroidsLazy = function Asteroids() {
     return arr
   }, [])
 
+  // Shared geometry and material to prevent memory waste
+  const sharedGeometry = useMemo(() => new THREE.DodecahedronGeometry(1, 0), [])
+  const sharedMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color: "#888", roughness: 1 }), [])
+  
+  // Cleanup shared resources
+  useEffect(() => {
+    return () => {
+      sharedGeometry.dispose()
+      sharedMaterial.dispose()
+    }
+  }, [sharedGeometry, sharedMaterial])
+
   return (
     <group>
       {asteroidPositions.map((a, i) => (
-        <mesh key={i} position={a.position} scale={a.scale} rotation={a.rotation}>
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color="#888" roughness={1} />
-        </mesh>
+        <mesh key={i} position={a.position} scale={a.scale} rotation={a.rotation} geometry={sharedGeometry} material={sharedMaterial} />
       ))}
     </group>
   )
@@ -312,9 +321,12 @@ function MobileImageGallery({
   useEffect(() => {
     if (images.length === 0) return;
     
+    const imageObjects: HTMLImageElement[] = [];
+    
     // Preload current image
     const current = new Image();
     current.src = images[currentIndex];
+    imageObjects.push(current);
     
     // Preload adjacent images for smooth transitions
     if (images.length > 1) {
@@ -323,10 +335,21 @@ function MobileImageGallery({
       
       const next = new Image();
       next.src = images[nextIndex];
+      imageObjects.push(next);
       
       const prev = new Image();
       prev.src = images[prevIndex];
+      imageObjects.push(prev);
     }
+    
+    // Cleanup to prevent memory leaks
+    return () => {
+      imageObjects.forEach(img => {
+        img.src = '';
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
   }, [currentIndex, images]);
 
   const nextImage = () => {
@@ -452,6 +475,8 @@ function DesktopImageGallery({
   useEffect(() => {
     if (images.length === 0) return;
     
+    const imageObjects: HTMLImageElement[] = [];
+    
     // Preload current and adjacent images only
     const indicesToLoad = [currentIndex];
     if (images.length > 1) {
@@ -464,7 +489,17 @@ function DesktopImageGallery({
     indicesToLoad.forEach(index => {
       const img = new Image();
       img.src = images[index];
+      imageObjects.push(img);
     });
+    
+    // Cleanup to prevent memory leaks
+    return () => {
+      imageObjects.forEach(img => {
+        img.src = '';
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
   }, [currentIndex, images]);
 
   // Get container dimensions
@@ -509,6 +544,13 @@ function DesktopImageGallery({
       setImageDimensions({ width: img.width, height: img.height });
     };
     img.src = images[currentIndex];
+    
+    // Cleanup to prevent memory leaks
+    return () => {
+      img.src = '';
+      img.onload = null;
+      img.onerror = null;
+    };
   }, [images, currentIndex]);
 
   const nextImage = () => {
@@ -953,6 +995,44 @@ function CoordinateLandmark({
     return clone;
   }, [scene]);
 
+  // Cleanup cloned scenes and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (glowAuraScene) {
+        glowAuraScene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => mat.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+            if (child.geometry) {
+              child.geometry.dispose();
+            }
+          }
+        });
+      }
+      if (highlightScene) {
+        highlightScene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => mat.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+            if (child.geometry) {
+              child.geometry.dispose();
+            }
+          }
+        });
+      }
+    };
+  }, [glowAuraScene, highlightScene]);
+
   // Add a yellow point light for the spotlight landmark only
   const isSpotlight = model === '/models/spotlight.glb';
   return (
@@ -1370,9 +1450,32 @@ function Typewriter3D({ onExplodeStart, onExplodeComplete }: {
       return () => clearTimeout(timer)
     }
   }, [animationPhase, onExplodeComplete])
+  
+  // Pause animation after 60 seconds to prevent excessive memory usage
+  useEffect(() => {
+    if (animationPhase === 'complete') {
+      const pauseTimer = setTimeout(() => {
+        // Clear animation refs after letters have flown far away
+        letterRefs.current = []
+        velocitiesRef.current = []
+        rotationSpeedsRef.current = []
+      }, 60000) // 60 seconds
+      return () => clearTimeout(pauseTimer)
+    }
+  }, [animationPhase])
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      letterRefs.current = []
+      velocitiesRef.current = []
+      rotationSpeedsRef.current = []
+    }
+  }, [])
 
-  // Animation loop
+  // Animation loop - run during explosion and complete phases to let letters fly infinitely
   useFrame(() => {
+    // Only run during active animation phases
     if ((animationPhase !== 'exploding' && animationPhase !== 'complete') || letterStates.length === 0) return
     
     letterRefs.current.forEach((ref, i) => {
@@ -2120,7 +2223,7 @@ function flyToLandmarkAndOpenModal(section: string) {
   React.useEffect(() => {
     // Preload critical hobby images in background after main scene loads
     if (!isLoading && earthLoaded && (galaxy2Loaded || skipGalaxy2) && moonLoaded && gooseLoaded) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         const criticalImages = [
           '/images/about me.webp',
           '/music/phoneboy.webp',
@@ -2128,11 +2231,24 @@ function flyToLandmarkAndOpenModal(section: string) {
           '/pics/enoshima.webp',
           '/skiing/massif.webp'
         ];
+        const imageObjects: HTMLImageElement[] = [];
         criticalImages.forEach(src => {
           const img = new Image();
           img.src = src;
+          imageObjects.push(img);
         });
+        
+        // Store for cleanup
+        return () => {
+          imageObjects.forEach(img => {
+            img.src = '';
+            img.onload = null;
+            img.onerror = null;
+          });
+        };
       }, 1200);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isLoading, earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded]);
 
