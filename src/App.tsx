@@ -1174,7 +1174,7 @@ interface LetterState {
   visible: boolean
 }
 
-function Typewriter3D({ onExplodeStart }: { 
+function Typewriter3D({ onExplodeStart, onExplodeComplete }: { 
   onExplodeStart: () => void, 
   onExplodeComplete: () => void 
 }) {
@@ -1207,6 +1207,11 @@ function Typewriter3D({ onExplodeStart }: {
   // Animation timing refs
   const explosionStartTime = useRef<number>(0)
   const hasTriggeredExplodeStart = useRef(false)
+  
+  // Use refs for animation to avoid memory leaks
+  const letterRefs = useRef<(THREE.Group | null)[]>([])
+  const velocitiesRef = useRef<THREE.Vector3[]>([])
+  const rotationSpeedsRef = useRef<THREE.Vector3[]>([])
 
   // Initialize letter states when positions are available
   useEffect(() => {
@@ -1314,34 +1319,33 @@ function Typewriter3D({ onExplodeStart }: {
   useEffect(() => {
     if (animationPhase === 'pause') {
       const timer = setTimeout(() => {
+        // Initialize velocity and rotation refs for animation
+        velocitiesRef.current = []
+        rotationSpeedsRef.current = []
+        
         // Calculate explosion velocities for all letters
-        setLetterStates(prevStates => 
-          prevStates.map(state => {
-            // Create random direction in 3D space
-            const direction = new THREE.Vector3(
-              (Math.random() - 0.5),
-              (Math.random() - 0.5),
-              (Math.random() - 0.5)
-            ).normalize()
-            
-            // Scale the velocity (speed of explosion)
-            const speed = 0.8 + Math.random() * 1.5
-            const velocity = direction.multiplyScalar(speed)
-            
-            // Random rotation speeds
-            const rotationSpeed = new THREE.Vector3(
-              (Math.random() - 0.5) * 0.06,
-              (Math.random() - 0.5) * 0.06,
-              (Math.random() - 0.5) * 0.06
-            )
-            
-            return {
-              ...state,
-              velocity,
-              rotationSpeed
-            }
-          })
-        )
+        letterStates.forEach((_state, i) => {
+          // Create random direction in 3D space
+          const direction = new THREE.Vector3(
+            (Math.random() - 0.5),
+            (Math.random() - 0.5),
+            (Math.random() - 0.5)
+          ).normalize()
+          
+          // Scale the velocity (speed of explosion)
+          const speed = 0.8 + Math.random() * 1.5
+          const velocity = direction.multiplyScalar(speed)
+          
+          // Random rotation speeds
+          const rotationSpeed = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.06,
+            (Math.random() - 0.5) * 0.06,
+            (Math.random() - 0.5) * 0.06
+          )
+          
+          velocitiesRef.current[i] = velocity
+          rotationSpeedsRef.current[i] = rotationSpeed
+        })
         
         explosionStartTime.current = Date.now()
         setAnimationPhase('exploding')
@@ -1354,35 +1358,36 @@ function Typewriter3D({ onExplodeStart }: {
       
       return () => clearTimeout(timer)
     }
-  }, [animationPhase, onExplodeStart])
+  }, [animationPhase, onExplodeStart, letterStates])
+
+  // Complete explosion after duration and trigger callback
+  useEffect(() => {
+    if (animationPhase === 'exploding') {
+      const timer = setTimeout(() => {
+        setAnimationPhase('complete')
+        onExplodeComplete()
+      }, 1500) // Match explosion duration
+      return () => clearTimeout(timer)
+    }
+  }, [animationPhase, onExplodeComplete])
 
   // Animation loop
   useFrame(() => {
     if ((animationPhase !== 'exploding' && animationPhase !== 'complete') || letterStates.length === 0) return
-    // Update letter positions and properties
-    setLetterStates(prevStates => 
-      prevStates.map(state => {
-        // Update position based on velocity (straight line motion)
-        const newPosition = state.currentPosition.clone()
-        newPosition.add(state.velocity.clone().multiplyScalar(1/60)) // Assuming 60fps
-
-        // Update rotation
-        const newRotation = state.rotation.clone()
-        newRotation.x += state.rotationSpeed.x
-        newRotation.y += state.rotationSpeed.y
-        newRotation.z += state.rotationSpeed.z
-
-        // Always visible during explosion
-        const opacity = 1
-
-        return {
-          ...state,
-          currentPosition: newPosition,
-          rotation: newRotation,
-          opacity
-        }
-      })
-    )
+    
+    letterRefs.current.forEach((ref, i) => {
+      if (!ref || !velocitiesRef.current[i] || !rotationSpeedsRef.current[i]) return
+      
+      // Update position - direct mutation
+      ref.position.x += velocitiesRef.current[i].x / 60
+      ref.position.y += velocitiesRef.current[i].y / 60
+      ref.position.z += velocitiesRef.current[i].z / 60
+      
+      // Update rotation - direct mutation
+      ref.rotation.x += rotationSpeedsRef.current[i].x
+      ref.rotation.y += rotationSpeedsRef.current[i].y
+      ref.rotation.z += rotationSpeedsRef.current[i].z
+    })
   })
 
   return (
@@ -1401,20 +1406,24 @@ function Typewriter3D({ onExplodeStart }: {
           const opacity = isFlying ? state.opacity : 1
           
           return (
-            <Text
+            <group
               key={`top-${i}`}
+              ref={(el) => { letterRefs.current[i] = el }}
               position={[position.x, position.y, position.z]}
               rotation={[rotation.x, rotation.y, rotation.z]}
-              anchorX="center"
-              anchorY="middle"
-              fontSize={fontSizeTop}
-              fontWeight={700}
-              color={i >= text1.length && i < text1.length + name.length ? "#7e8bf5" : "#ffffff"}
-              material-transparent={true}
-              material-opacity={opacity}
             >
-              {state.char}
-            </Text>
+              <Text
+                anchorX="center"
+                anchorY="middle"
+                fontSize={fontSizeTop}
+                fontWeight={700}
+                color={i >= text1.length && i < text1.length + name.length ? "#7e8bf5" : "#ffffff"}
+                material-transparent={true}
+                material-opacity={opacity}
+              >
+                {state.char}
+              </Text>
+            </group>
           )
         })}
       </group>
@@ -1428,21 +1437,27 @@ function Typewriter3D({ onExplodeStart }: {
           const rotation = isFlying ? state.rotation : new THREE.Euler(0, 0, 0)
           const opacity = isFlying ? state.opacity : 1
           
+          const refIndex = topLetters.length + i
+          
           return (
-            <Text
+            <group
               key={`bot-${i}`}
+              ref={(el) => { letterRefs.current[refIndex] = el }}
               position={[position.x, position.y, position.z]}
               rotation={[rotation.x, rotation.y, rotation.z]}
-              anchorX="center"
-              anchorY="middle"
-              fontSize={fontSizeBottom}
-              fontWeight={700}
-              color="#ffffff"
-              material-transparent={true}
-              material-opacity={opacity}
             >
-              {state.char}
-            </Text>
+              <Text
+                anchorX="center"
+                anchorY="middle"
+                fontSize={fontSizeBottom}
+                fontWeight={700}
+                color="#ffffff"
+                material-transparent={true}
+                material-opacity={opacity}
+              >
+                {state.char}
+              </Text>
+            </group>
           )
         })}
       </group>
@@ -1799,7 +1814,6 @@ function AboutMe() {
 
   // UI state
   const [showUI, setShowUI] = React.useState(false)
-  const [isTypewriterDone, setTypewriterDone] = React.useState(false)
   const [explosionFinished, setExplosionFinished] = React.useState(false)
   const [cameraZoomFinished, setCameraZoomFinished] = React.useState(false)
   const [headerVisible, setHeaderVisible] = React.useState(false)
@@ -1844,11 +1858,7 @@ function AboutMe() {
     console.log('Explosion animation completed')
   }
 
-  // Unmount Typewriter3D only after both explosion and camera zoom are finished
   React.useEffect(() => {
-    if (explosionFinished && cameraZoomFinished) {
-      setTypewriterDone(true)
-    }
   }, [explosionFinished, cameraZoomFinished])
 
   // Listen for 'r' key to trigger camera reset
@@ -2079,16 +2089,25 @@ function flyToLandmarkAndOpenModal(section: string) {
 
   React.useEffect(() => {
     // Calculate actual loading progress based on loaded models (or skipped ones)
-    const requiredModels = [earthLoaded, galaxy2Loaded || skipGalaxy2, moonLoaded, gooseLoaded];
+    // On mobile, Galaxy2 is skipped by default, so only count 3 models
+    const requiredModels = isMobile 
+      ? [earthLoaded, moonLoaded, gooseLoaded]
+      : [earthLoaded, galaxy2Loaded || skipGalaxy2, moonLoaded, gooseLoaded];
+    
+    const totalModels = isMobile ? 3 : 4;
     const loadedCount = requiredModels.filter(Boolean).length;
-    const actualProgress = Math.round((loadedCount / 4) * 100);
+    const actualProgress = Math.round((loadedCount / totalModels) * 100);
     
     // Update progress smoothly to the actual progress
     setLoadingProgress(actualProgress);
     
-    console.log('Loading progress:', { earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded, loadedCount, actualProgress });
+    console.log('Loading progress:', { isMobile, earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded, loadedCount, actualProgress });
 
-    if (earthLoaded && (galaxy2Loaded || skipGalaxy2) && moonLoaded && gooseLoaded) {
+    const allLoaded = isMobile
+      ? earthLoaded && moonLoaded && gooseLoaded
+      : earthLoaded && (galaxy2Loaded || skipGalaxy2) && moonLoaded && gooseLoaded;
+
+    if (allLoaded) {
       // All required models loaded (or skipped), complete the loading sequence
       setLoadingProgress(100);
       // Hide loading screen after reaching 100%
@@ -2096,7 +2115,7 @@ function flyToLandmarkAndOpenModal(section: string) {
         setIsLoading(false);
       }, 500);
     }
-  }, [earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded]);
+  }, [earthLoaded, galaxy2Loaded, skipGalaxy2, moonLoaded, gooseLoaded, isMobile]);
 
   React.useEffect(() => {
     // Preload critical hobby images in background after main scene loads
@@ -2278,13 +2297,11 @@ function flyToLandmarkAndOpenModal(section: string) {
                 </EffectComposer>
               )}
               <AnimatedCamera position={cameraPos} />
-              {/* Typewriter animation - keep mounted until explosion is done */}
-              {!isTypewriterDone && (
-                <Typewriter3D
-                  onExplodeStart={handleExplodeStart}
-                  onExplodeComplete={handleExplodeComplete}
-                />
-              )}
+              {/* Typewriter animation */}
+              <Typewriter3D
+                onExplodeStart={handleExplodeStart}
+                onExplodeComplete={handleExplodeComplete}
+              />
               {/* All scene elements - always loaded and rendered properly */}
               <Stars 
                 radius={100} 
