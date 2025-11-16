@@ -2570,10 +2570,23 @@ function flyToLandmarkAndOpenModal(section: string) {
 
               {activeModal === "experience" && (
                 <div className="px-6 sm:px-10 md:px-16 lg:px-20 max-w-5xl w-full flex-1 flex flex-col min-h-0">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl pt-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 mb-4 sm:mb-6 text-center sm:text-left flex-shrink-0">
-                    Experience
-                  </h2>
-                  <div className="flex flex-col gap-5 sm:gap-6 items-stretch pb-6 overflow-y-auto flex-1 pr-1 projects-scrollbar">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 pt-4 flex-shrink-0 gap-3">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 text-center sm:text-left">
+                      Experience
+                    </h2>
+                    <a
+                      href="/DominicLDM_resume.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-300 hover:text-pink-300 text-sm sm:text-base font-medium transition-colors duration-300 flex items-center gap-1.5 underline decoration-purple-400/40 hover:decoration-pink-400/60 underline-offset-4 justify-center sm:justify-start"
+                    >
+                      View Resume
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                      <div className="flex flex-col gap-5 sm:gap-6 items-stretch pb-6 overflow-y-auto flex-1 pr-1 projects-scrollbar">
                     {/* Experience Entry */}
                     <div className="border-l-4 border-purple-400/60 pl-5 sm:pl-6 pr-4 py-3 hover:border-pink-300/60 transition-all duration-300 group">
                       <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
@@ -2627,7 +2640,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         Modernized a legacy website and built AI-powered tools to streamline legal research and document analysis.
                       </p>
                     </div>
-                  </div>
+                      </div>
                 </div>
               )}
 
