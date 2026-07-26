@@ -182,7 +182,7 @@ const hobbyData: Record<HobbyKey, HobbyInfo> = {
   photos: {
     title: 'Cool photos!',
     images: ['/pics/enoshima.webp', '/pics/fuji.webp', '/pics/arctic.webp', '/pics/spike.webp', '/pics/aurora.webp', '/pics/swan.webp', '/pics/shrine.webp', '/pics/poutine.webp', '/pics/island.webp', '/pics/lighthouse.webp', '/pics/chow.webp', '/pics/bamboo.webp', '/pics/dp.webp', '/pics/train.webp', '/pics/tree.webp', '/pics/goat.webp', '/pics/nice.webp', '/pics/lights.webp', '/pics/speaker.webp', '/pics/water.webp', '/pics/turtle.webp', '/pics/coolio.webp', '/pics/night.webp', '/pics/vibes.webp', '/pics/taleng.webp', '/pics/robot.webp', '/pics/dartmouth.webp', '/pics/slush.webp', '/pics/wall.webp', '/pics/tower.webp', '/pics/tori.webp', '/pics/peace.webp', '/pics/stairs.webp', '/pics/me.webp', '/pics/cool.webp', '/pics/ice.webp'],
-    description: 'Fun memories and nice photos I\'ve taken over the years :)',
+    description: 'I haven\'t updated the site in a while but check out @windtempos.jpg on instagram for my proper photography account!',
     imageDescriptions: [
       'Japanese sunset over Enoshima and Fuji',
       'Fujisan',
@@ -1858,12 +1858,14 @@ function AboutMe() {
             </p>
             
             <p>
-              In my spare time, I also enjoy{' '}
-              <span className="font-semibold text-purple-200">musical theatre</span>,{' '}
+              I'm also passionate about{' '}
+              <span className="font-semibold text-purple-200">photography</span>,{' '}
               <span className="font-semibold text-purple-200">e-sports</span>, and{' '}
-              <span className="font-semibold text-purple-200">taking fun photos</span>!
+              <span className="font-semibold text-purple-200">solo-travel</span>!
             </p>
-            
+            <p>
+              Check out my photography at <a href="https://instagram.com/windtempos.jpg" target="_blank" rel="noopener noreferrer" className="text-purple-200 hover:text-pink-300 underline">Instagram</a>!
+            </p>
             <p>
               Feel free to contact me, and thanks for checking out my site :D
             </p>
@@ -2591,7 +2593,24 @@ function flyToLandmarkAndOpenModal(section: string) {
                     <div className="border-l-4 border-purple-400/60 pl-5 sm:pl-6 pr-4 py-3 hover:border-pink-300/60 transition-all duration-300 group">
                       <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
                         <h3 className="text-base sm:text-lg md:text-xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">
-                          Incoming Software Engineer Intern
+                          Infrastructure Engineering Intern
+                        </h3>
+                        <p className="text-purple-300/80 text-xs sm:text-sm font-medium whitespace-nowrap mt-0.5 sm:mt-0">
+                          May 2026 - Aug 2026
+                        </p>
+                      </div>
+                      <p className="text-purple-300/90 text-sm sm:text-base font-medium mb-2">
+                        Shopify
+                      </p>
+                      <p className="leading-relaxed text-white/85 text-xs sm:text-sm">
+                        Summer 2026! Making commerce better for everyone on the Database Platform team!
+                      </p>
+                    </div>    
+                    {/* Experience Entry */}
+                    <div className="border-l-4 border-purple-400/60 pl-5 sm:pl-6 pr-4 py-3 hover:border-pink-300/60 transition-all duration-300 group">
+                      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-purple-200 group-hover:text-pink-200 transition-colors duration-300">
+                          Software Engineer Intern
                         </h3>
                         <p className="text-purple-300/80 text-xs sm:text-sm font-medium whitespace-nowrap mt-0.5 sm:mt-0">
                           Jan 2026 - Apr 2026
@@ -2601,7 +2620,7 @@ function flyToLandmarkAndOpenModal(section: string) {
                         Versaterm
                       </p>
                       <p className="leading-relaxed text-white/85 text-xs sm:text-sm">
-                        Incoming Winter 2026! Building software for public safety agencies using Java, Spring Boot, C#, and ASP.NET.
+                        Winter 2026! Built software for public safety agencies using Java, Spring Boot, and C#.
                       </p>
                     </div>
 
